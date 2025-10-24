@@ -28,8 +28,8 @@ public class Estimator {
 
         this.poseEstimator = new SwerveDrivePoseEstimator(
                 drivetrain.getKinematics(),
-                drivetrain.getHeading(),
-                drivetrain.getModulePositions(),
+                drivetrain.getState().RawHeading,
+                drivetrain.getState().ModulePositions,
                 new Pose2d(new Translation2d(0, 0), new Rotation2d(0)),
                 stateStdDevsMatrix,
                 vistionStdDevsMatrix
@@ -40,7 +40,7 @@ public class Estimator {
     }
 
     public void update() {
-        poseEstimator.update(drivetrain.getHeading(), drivetrain.getModulePositions());
+        poseEstimator.update(drivetrain.getState().RawHeading, drivetrain.getState().ModulePositions);
         field.setRobotPose(getPose()); // Update advantageScope / logs
     }
 
@@ -50,7 +50,7 @@ public class Estimator {
 
     public void addVisionMeasurement(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs) {
         // Makes sure that vision cannot give false heading estimates
-        Pose2d correctedPose = new Pose2d(pose.getTranslation(), drivetrain.getHeading());
+        Pose2d correctedPose = new Pose2d(pose.getTranslation(), drivetrain.getState().RawHeading);
         poseEstimator.addVisionMeasurement(correctedPose, timestamp, stdDevs);
     }
 }

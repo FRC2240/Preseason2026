@@ -289,19 +289,4 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     ) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
     }
-
-    public Rotation2d getHeading() {
-        return getPigeon2().getRotation2d();
-    }
-    
-
-    public SwerveModulePosition[] getModulePositions() {
-        final SwerveModule<TalonFX, TalonFX, CANcoder>[] modules = getModules();
-        SwerveModulePosition[] positions = new SwerveModulePosition[4];
-        for (int i = 0; i < 4; i++) {
-            positions[i] = modules[i].getPosition(false); // Turn refresh to true to block until the pos has been got
-        }
-        
-        return positions;
-    }
 }
