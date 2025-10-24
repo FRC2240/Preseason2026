@@ -6,13 +6,17 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -284,5 +288,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Matrix<N3, N1> visionMeasurementStdDevs
     ) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
+    }
+
+    public Rotation2d getHeading() {
+        return getPigeon2().getRotation2d();
+    }
+    
+
+    public SwerveModulePosition[] getModulePositions() {
+        final SwerveModule<TalonFX, TalonFX, CANcoder>[] modules = getModules();
+        SwerveModulePosition[] positions = new SwerveModulePosition[4];
+        for (int i = 0; i < 4; i++) {
+            positions[i] = modules[i].getPosition(false); // Turn refresh to true to block until the pos has been got
+        }
+        
+        return positions;
     }
 }
