@@ -25,11 +25,9 @@ public class RobotContainer {
     
 
     private final Telemetry logger = new Telemetry(Robot.MaxSpeed);
-
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(joystick);
-    public final Estimator estimator = new Estimator(drivetrain);
 
     public RobotContainer() {
         configureBindings();
