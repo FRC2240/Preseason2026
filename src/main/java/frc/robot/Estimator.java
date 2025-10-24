@@ -1,16 +1,11 @@
 package frc.robot;
 
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.swerve.SwerveModule;
-
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -22,11 +17,25 @@ public class Estimator {
     private final CommandSwerveDrivetrain drivetrain;
     private final SwerveDrivePoseEstimator poseEstimator;
 
+    double[] stateStdDevs = { 0.05, 0.05, 0.005 }; // x, y, theta (rad)
+    double[] visionStdDevs = { 0.5, 0.5, Double.MAX_VALUE }; // huge theta variance so vision never changes heading
+
     public Estimator(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
-        this.poseEstimator = new SwerveDrivePoseEstimator(drivetrain.getKinematics(),
-                drivetrain.getHeading(), drivetrain.getModulePositions(), new Pose2d(new Translation2d(0,0), new Rotation2d(0)));
 
+        Matrix<N3, N1> stateStdDevsMatrix = new Matrix<N3, N1>(Nat.N3(), Nat.N1(), stateStdDevs);
+        Matrix<N3, N1> vistionStdDevsMatrix = new Matrix<N3, N1>(Nat.N3(), Nat.N1(), visionStdDevs);
+
+        this.poseEstimator = new SwerveDrivePoseEstimator(
+                drivetrain.getKinematics(),
+                drivetrain.getHeading(),
+                drivetrain.getModulePositions(),
+                new Pose2d(new Translation2d(0, 0), new Rotation2d(0)),
+                stateStdDevsMatrix,
+                vistionStdDevsMatrix
+        );
+
+        // Creates smartdashboard widget
         SmartDashboard.putData("Field", field);
     }
 
@@ -39,7 +48,9 @@ public class Estimator {
         return poseEstimator.getEstimatedPosition();
     }
 
-    public void addVisionMeasurement(Pose2d pose, double timestamp, Matrix<N3,N1> stdDevs) {
-        poseEstimator.addVisionMeasurement(pose, timestamp, stdDevs);
+    public void addVisionMeasurement(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs) {
+        // Makes sure that vision cannot give false heading estimates
+        Pose2d correctedPose = new Pose2d(pose.getTranslation(), drivetrain.getHeading());
+        poseEstimator.addVisionMeasurement(correctedPose, timestamp, stdDevs);
     }
 }
