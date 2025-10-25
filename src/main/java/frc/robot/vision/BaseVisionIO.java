@@ -1,16 +1,10 @@
 package frc.robot.vision;
 
-//Java includes
-import org.littletonrobotics.junction.AutoLog;
-//import org.littletonrobotics.junction.inputs.LoggableInputs;
-
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 // anything that uses the interface must provide methods
 public interface BaseVisionIO {
-    // AdvantageKit logging
-    @AutoLog
     public static class BaseVisionIOInput {
         // array of april tag IDs empty by default
         public int[] april_tag_IDs = new int[0];

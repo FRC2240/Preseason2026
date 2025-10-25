@@ -102,17 +102,11 @@ public class ParentPhotonVisionIO implements BaseVisionIO{
                     // add data
                     pose_estimation_data.add(
                     new pose_estimation_data(
-
                             raw_data.getTimestampSeconds(), 
-                            
                             tag.poseAmbiguity, 
-
                             1, 
-
                             cam_to_tag.getTranslation().getNorm(), 
-
                             bot_pos, 
-
                             vision_configuration_type.PHOTOVISION));
                 }
             }

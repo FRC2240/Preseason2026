@@ -22,8 +22,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 //import edu.wpi.first.wpilibj.Alert; disconnected logging
-
-import org.littletonrobotics.junction.Logger;
+import frc.robot.vision.BaseVisionIO.BaseVisionIOInput;
 
 public class Vision extends SubsystemBase {
 
@@ -32,7 +31,7 @@ public class Vision extends SubsystemBase {
     // empty array that can accept any object implementing the interface
     private final BaseVisionIO[] IO_base;
     // AutoLogged auto generated class
-    private final BaseVisionIOInputAutoLogged[] input;
+    private final BaseVisionIOInput[] input;
 
     // elipces means multiple objects of vision_IO_Base class can be passed in so
     // multiple cameras
@@ -44,9 +43,9 @@ public class Vision extends SubsystemBase {
         this.consumer = consumer;
         this.IO_base = IO_base;
 
-        this.input = new BaseVisionIOInputAutoLogged[IO_base.length];
+        this.input = new BaseVisionIOInput[IO_base.length];
         for (int i = 0; i < IO_base.length; i++) {
-            input[i] = new BaseVisionIOInputAutoLogged();
+            input[i] = new BaseVisionIOInput();
         }
 
     }
@@ -61,7 +60,7 @@ public class Vision extends SubsystemBase {
     public void periodic() {
         for (int i = 0; i < IO_base.length; i++) {
             IO_base[i].update_inputs(input[i]);
-            Logger.processInputs("Vision/Camera" + i, input[i]);
+            //Logger.processInputs("Vision/Camera" + i, input[i]);
         }
 
 
@@ -127,6 +126,8 @@ public class Vision extends SubsystemBase {
             }
 
             //logs data by camera
+            
+            /*
             Logger.recordOutput(
                 "Vision/Camera" + Integer.toString(i) + "/Tag_positions",
                 tag_poses.toArray(new Pose3d[tag_poses.size()]));
@@ -139,7 +140,7 @@ public class Vision extends SubsystemBase {
             Logger.recordOutput(
                 "Vision/Camera" + Integer.toString(i) + "/Rejected_positions",
                 rejected_poses.toArray(new Pose3d[rejected_poses.size()]));
-
+ */
         }
     }
 
