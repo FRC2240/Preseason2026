@@ -338,6 +338,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 visionMeasurementStdDevs);
     }
 
+    public Rotation2d getHeading() {
+        return getState().RawHeading;
+    }
+
+    public Pose2d getPose() {
+        return getState().Pose;
+    }
+
     public Command driveCommand() {
         return applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * Robot.MaxSpeed)
                 .withVelocityY(-joystick.getLeftX() * Robot.MaxSpeed)

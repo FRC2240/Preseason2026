@@ -4,31 +4,40 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degree;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-
+import frc.robot.vision.RealLimelightVisionIO;
+import frc.robot.vision.SimPhotonVisionIO;
+import frc.robot.vision.Vision;
 import frc.robot.Constants.Robot;
 
 public class RobotContainer {
-    
 
     private final Telemetry logger = new Telemetry(Robot.MaxSpeed);
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(joystick);
+    public final Vision vision;
 
     public RobotContainer() {
+
+        if (RobotBase.isReal()) {
+            vision = new Vision(drivetrain::addVisionMeasurement,
+                    new RealLimelightVisionIO("limelight-left", drivetrain::getHeading),
+                    new RealLimelightVisionIO("limelight-right", drivetrain::getHeading));
+        } else {
+            vision = new Vision(drivetrain::addVisionMeasurement,
+                    new SimPhotonVisionIO("camera_0", drivetrain::getPose, Constants.Vision.CAMERA_0_POS),
+                    new SimPhotonVisionIO("camera_1", drivetrain::getPose, Constants.Vision.CAMERA_0_POS));
+        }
+
         configureBindings();
     }
 
@@ -41,21 +50,21 @@ public class RobotContainer {
         // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
         RobotModeTriggers.disabled().whileTrue(
-            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
-        );
+                drivetrain.applyRequest(() -> idle).ignoringDisable(true));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        //joystick.button(1).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        //joystick.button(2).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        //joystick.button(3).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        //joystick.button(4).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        // joystick.button(1).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        // joystick.button(2).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        // joystick.button(3).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        // joystick.button(4).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
         // Slow the robot's movements to the slow speeds
         joystick.b().toggleOnTrue(drivetrain.driveSlowCommand());
-        //joystick.button(1).onTrue(drivetrain.driveToPose(new Pose2d(new Translation2d(3, 3), new Rotation2d(Degree.of(50)))));
+        // joystick.button(1).onTrue(drivetrain.driveToPose(new Pose2d(new
+        // Translation2d(3, 3), new Rotation2d(Degree.of(50)))));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

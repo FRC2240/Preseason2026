@@ -13,7 +13,6 @@ import static frc.robot.Constants.Vision.MAX_Z_ERROR;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.zip.ZipException;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -62,14 +61,9 @@ public class Vision extends SubsystemBase {
     public void periodic() {
         for (int i = 0; i < IO_base.length; i++) {
             IO_base[i].update_inputs(input[i]);
-            //Logger.processInputs("Vision/Camera" + i, input[i]);
+            Logger.processInputs("Vision/Camera" + i, input[i]);
         }
 
-        // stores data for all cameras
-        List<Pose3d> all_tag_poses = new LinkedList<>(); // position of all tags seen
-        List<Pose3d> all_robot_poses = new LinkedList<>(); // all calculated robot poses
-        List<Pose3d> all_accepted_poses = new LinkedList<>(); // all accepted (reasonable) positions
-        List<Pose3d> all_rejected_poses = new LinkedList<>(); // all rejected (outside theshold unrealistic)
 
         // does a bunch of suff for each camera
         for (int i = 0; i < IO_base.length; i++) {
@@ -98,18 +92,8 @@ public class Vision extends SubsystemBase {
                 boolean xOutBounds = (estimation.position().getX() < 0.0) &&  (estimation.position().getX() > APRIL_TAG_LAYOUT.getFieldLength());
                 boolean yOutBounds = (estimation.position().getY() < 0.0) && (estimation.position().getY() > APRIL_TAG_LAYOUT.getFieldWidth());
 
-                /*
-                System.out.println("TagCount: "+tagCountInvalid);
-                System.out.println("Uncertainty: " + uncertaintyInvalid);
-                System.out.println("Zerror: " +zErrorInvalid);
-                System.out.println("X Out of bounds: " + xOutBounds);
-                System.out.println("Y out of bounds: " + yOutBounds);
-                */
-
                 boolean reject_pose =  tagCountInvalid || uncertaintyInvalid || zErrorInvalid || xOutBounds || yOutBounds;
                         
-
-                
 
                 robot_poses.add(estimation.position()); // stores all robot positions for a camera
                 if (!reject_pose) {
@@ -135,20 +119,10 @@ public class Vision extends SubsystemBase {
                     angular_stdev *= ANGULAR_STDEV_MEGATAG_2_COEFF;
                 }
 
-                // TODO used if one camera is more trustworthy
-                /* 
-                if () {
-                    
-                }
-                */
-
-                //sends vision data
-                
+                // Adds vision data to drivebase estimator    
                 consumer.accepts(
-                    estimation.timestamp(),
                     estimation.position().toPose2d(),
-                    // x, y, and theta
-                    //x = y
+                    estimation.timestamp(),
                     VecBuilder.fill(linear_stdev, linear_stdev, angular_stdev));
             }
 
@@ -166,12 +140,6 @@ public class Vision extends SubsystemBase {
                 "Vision/Camera" + Integer.toString(i) + "/Rejected_positions",
                 rejected_poses.toArray(new Pose3d[rejected_poses.size()]));
 
-            // stores data for each camera
-            all_tag_poses.addAll(tag_poses);
-            all_robot_poses.addAll(robot_poses);
-            all_accepted_poses.addAll(accepted_poses);
-            all_rejected_poses.addAll(rejected_poses);
-
         }
     }
 
@@ -181,8 +149,8 @@ public class Vision extends SubsystemBase {
     // consumer accepts but returns nothing
     public static interface vision_consumer {
         public void accepts(
-                double timestamp,
                 Pose2d robot_pose,
+                double timestamp,
                 // how much uncertainty there is
                 // <N3, N1> takes 3 standerd devaitions from vector
                 Matrix<N3, N1> stdevs);
