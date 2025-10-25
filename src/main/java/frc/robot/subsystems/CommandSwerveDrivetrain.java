@@ -6,25 +6,28 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -43,8 +46,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /* Driving configs */
     private CommandXboxController joystick;
+    private Timer joystickTimer = new Timer();
+
+    private final SwerveRequest.ApplyRobotSpeeds driveAlignment = new SwerveRequest.ApplyRobotSpeeds();
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(Robot.MaxSpeed * 0.1).withRotationalDeadband(Robot.MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(Robot.MaxSpeed * 0.1)
+            .withRotationalDeadband(Robot.MaxAngularRate * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -144,12 +151,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public CommandSwerveDrivetrain(CommandXboxController joystick) {
-    super(TunerConstants.DrivetrainConstants, TunerConstants.FrontLeft, TunerConstants.FrontRight, TunerConstants.BackLeft, TunerConstants.BackRight);
-    this.joystick = joystick;
-    if (Utils.isSimulation()) {
-        startSimThread();
+        super(TunerConstants.DrivetrainConstants, TunerConstants.FrontLeft, TunerConstants.FrontRight,
+                TunerConstants.BackLeft, TunerConstants.BackRight);
+        this.joystick = joystick;
+        if (Utils.isSimulation()) {
+            startSimThread();
+        }
     }
-}
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -331,16 +339,55 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public Command driveCommand() {
-        return applyRequest(() ->
-            drive.withVelocityX(-joystick.getLeftY() * Robot.MaxSpeed) // Drive forward with negative Y (forward)
-            .withVelocityY(-joystick.getLeftX() * Robot.MaxSpeed) // Drive left with negative X (left)
-            .withRotationalRate(-joystick.getRightX() * Robot.MaxAngularRate)); // Drive counterclockwise with negative X (left)
+        return applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * Robot.MaxSpeed)
+                .withVelocityY(-joystick.getLeftX() * Robot.MaxSpeed)
+                .withRotationalRate(-joystick.getRightX() * Robot.MaxAngularRate));
     }
 
     public Command driveSlowCommand() {
-        return applyRequest(() ->
-            drive.withVelocityX(-joystick.getLeftY() * Robot.MaxSlowSpeed) 
-            .withVelocityY(-joystick.getLeftX() * Robot.MaxSlowSpeed)
-            .withRotationalRate(-joystick.getRightX() * Robot.MaxSlowAngularRate));
+        return applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * Robot.MaxSlowSpeed)
+                .withVelocityY(-joystick.getLeftX() * Robot.MaxSlowSpeed)
+                .withRotationalRate(-joystick.getRightX() * Robot.MaxSlowAngularRate));
+    }
+
+    public Command driveToPose(Pose2d target) {
+        return Commands.runOnce(() -> {
+            joystickTimer.restart();
+        }, this).andThen(Commands.run(() -> {
+            Pose2d currentPose = getState().Pose;
+
+            // Gets x and y components
+            Translation2d translationToTarget = target.getTranslation().minus(currentPose.getTranslation());
+            Rotation2d directionOfTravel = translationToTarget.getAngle();
+            double linearDistance = translationToTarget.getNorm();
+
+            double velocityOutput = Math.min(Robot.TranslationController.calculate(linearDistance, 0), Robot.MaxSpeed);
+            LinearVelocity xComponent = MetersPerSecond.of(-velocityOutput * directionOfTravel.getCos());
+            LinearVelocity yComponent = MetersPerSecond.of(-velocityOutput * directionOfTravel.getSin());
+
+            // Gets angle
+            double rotationDistRadians = target.getRotation().minus(currentPose.getRotation()).getRadians();
+            AngularVelocity omega = RadiansPerSecond
+                    .of(MathUtil.clamp(-Robot.RotationController.calculate(rotationDistRadians, 0),
+                            -Robot.MaxAngularRate, Robot.MaxAngularRate));
+
+            ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                    xComponent, yComponent, omega, currentPose.getRotation());
+
+            setControl(driveAlignment.withSpeeds(speeds));
+        }, this).until(() -> {
+            // Until close enough to the pose
+            Pose2d currentPose = getState().Pose;
+
+            return currentPose.getRotation().getMeasure().isNear(target.getRotation().getMeasure(), Robot.RotationDeadband) &&
+                   currentPose.getTranslation().getMeasureX().isNear(target.getTranslation().getMeasureX(), Robot.TranslationDeadband) &&
+                   currentPose.getTranslation().getMeasureY().isNear(target.getTranslation().getMeasureY(), Robot.TranslationDeadband);
+        }).until(() -> {
+            return joystickTimer.hasElapsed(Robot.ControllerCooldown) &&
+                    (Math.abs(joystick.getRightX()) > Robot.ControllerThreshold ||
+                     Math.abs(joystick.getRightY()) > Robot.ControllerThreshold ||
+                     Math.abs(joystick.getLeftX()) > Robot.ControllerThreshold ||
+                     Math.abs(joystick.getLeftY()) > Robot.ControllerThreshold);
+        }));
     }
 }
