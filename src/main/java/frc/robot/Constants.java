@@ -21,11 +21,11 @@ public class Constants {
         public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
         public static double MaxAngularRate = RotationsPerSecond.of(1).in(RadiansPerSecond);
 
-        public static double MaxSlowSpeed = MaxSpeed / 3;
+        public static double MaxSlowSpeed = MaxSpeed / 4;
         public static double MaxSlowAngularRate = MaxAngularRate / 3;
 
-        public static PIDController TranslationController = new PIDController(10, 0, 1);
-        public static PIDController RotationController = new PIDController(10, 0, 0);
+        public static PIDController TranslationController = new PIDController(5, 0, 1);
+        public static PIDController RotationController = new PIDController(5, 0, 0);
         public static Distance TranslationDeadband = Inches.of(0.05);
         public static Angle RotationDeadband = Degrees.of(0.05);
         public static double ControllerCooldown = 0.3;
