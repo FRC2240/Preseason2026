@@ -21,6 +21,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //import edu.wpi.first.wpilibj.Alert; disconnected logging
 import frc.robot.vision.BaseVisionIO.BaseVisionIOInput;
 
@@ -33,21 +35,24 @@ public class Vision extends SubsystemBase {
     // AutoLogged auto generated class
     private final BaseVisionIOInput[] input;
 
+    public final Field2d[] fields;
+
     // elipces means multiple objects of vision_IO_Base class can be passed in so
     // multiple cameras
     public Vision(vision_consumer consumer, BaseVisionIO... IO_base) {
         // this passes the private final consumer in
         // so running the method uses parameters to define private final variables which
         // then can't be changed
-
         this.consumer = consumer;
         this.IO_base = IO_base;
 
         this.input = new BaseVisionIOInput[IO_base.length];
+        this.fields = new Field2d[IO_base.length];
         for (int i = 0; i < IO_base.length; i++) {
             input[i] = new BaseVisionIOInput();
+            fields[i] = new Field2d();
+            SmartDashboard.putData("Vision/camera" + i, fields[i]);
         }
-
     }
 
     // returns X angle to nearest tag, method
@@ -60,9 +65,8 @@ public class Vision extends SubsystemBase {
     public void periodic() {
         for (int i = 0; i < IO_base.length; i++) {
             IO_base[i].update_inputs(input[i]);
-            //Logger.processInputs("Vision/Camera" + i, input[i]);
+            // Logger.processInputs("Vision/Camera" + i, input[i]);
         }
-
 
         // does a bunch of suff for each camera
         for (int i = 0; i < IO_base.length; i++) {
@@ -81,18 +85,20 @@ public class Vision extends SubsystemBase {
 
             for (var estimation : input[i].pose_estimation_data) {
                 // confirms estimation data is with in thresholds
-                // example has many unecissary seeming conditions
-                // come back to
-                // potential point of failure
+                // example has many unnessesary seeming conditions
+                // come back to this because its a potential point of failure
 
                 boolean tagCountInvalid = estimation.april_tag_count() == 0;
-                boolean uncertaintyInvalid = (estimation.april_tag_count() == 1 && estimation.uncertainty() > MAX_UNCERTAINTY);
-                boolean zErrorInvalid=  Math.abs(estimation.position().getZ())  > MAX_Z_ERROR;
-                boolean xOutBounds = (estimation.position().getX() < 0.0) &&  (estimation.position().getX() > APRIL_TAG_LAYOUT.getFieldLength());
-                boolean yOutBounds = (estimation.position().getY() < 0.0) && (estimation.position().getY() > APRIL_TAG_LAYOUT.getFieldWidth());
+                boolean uncertaintyInvalid = (estimation.april_tag_count() == 1
+                        && estimation.uncertainty() > MAX_UNCERTAINTY);
+                boolean zErrorInvalid = Math.abs(estimation.position().getZ()) > MAX_Z_ERROR;
+                boolean xOutBounds = (estimation.position().getX() < 0.0)
+                        && (estimation.position().getX() > APRIL_TAG_LAYOUT.getFieldLength());
+                boolean yOutBounds = (estimation.position().getY() < 0.0)
+                        && (estimation.position().getY() > APRIL_TAG_LAYOUT.getFieldWidth());
 
-                boolean reject_pose =  tagCountInvalid || uncertaintyInvalid || zErrorInvalid || xOutBounds || yOutBounds;
-                        
+                boolean reject_pose = tagCountInvalid || uncertaintyInvalid || zErrorInvalid || xOutBounds
+                        || yOutBounds;
 
                 robot_poses.add(estimation.position()); // stores all robot positions for a camera
                 if (!reject_pose) {
@@ -107,40 +113,29 @@ public class Vision extends SubsystemBase {
 
                 // calculate stdev
                 // stdev is an aproximation it is hueristic as the real thing can't be found
-                //for some reason this baseline works with a multiplier to find x, y, and theta stdevs
-                double stdev_factor = Math.pow(estimation.average_tag_distance(), 2.0)/estimation.april_tag_count();
+                // for some reason this baseline works with a multiplier to find x, y, and theta
+                // stdevs
+                double stdev_factor = Math.pow(estimation.average_tag_distance(), 2.0) / estimation.april_tag_count();
                 double linear_stdev = LINEAR_STDEV_COEFF * stdev_factor;
                 double angular_stdev = ANGULAR_STDEV_COEFF * stdev_factor;
 
-                //MTag2 configs
+                // MTag2 configs
                 if (estimation.type() == vision_configuration_type.METATAG_2) {
-                    linear_stdev *=  LINEAR_STDEV_MEGATAG_2_COEFF;
+                    linear_stdev *= LINEAR_STDEV_MEGATAG_2_COEFF;
                     angular_stdev *= ANGULAR_STDEV_MEGATAG_2_COEFF;
                 }
 
-                // Adds vision data to drivebase estimator    
+                // Adds vision data to drivebase estimator
                 consumer.accepts(
-                    estimation.position().toPose2d(),
-                    estimation.timestamp(),
-                    VecBuilder.fill(linear_stdev, linear_stdev, angular_stdev));
+                        estimation.position().toPose2d(),
+                        estimation.timestamp(),
+                        VecBuilder.fill(linear_stdev, linear_stdev, angular_stdev));
             }
 
-            //logs data by camera
-            
-            /*
-            Logger.recordOutput(
-                "Vision/Camera" + Integer.toString(i) + "/Tag_positions",
-                tag_poses.toArray(new Pose3d[tag_poses.size()]));
-            Logger.recordOutput(
-                "Vision/Camera" + Integer.toString(i) + "/Robot_positions",
-                robot_poses.toArray(new Pose3d[robot_poses.size()]));
-            Logger.recordOutput(
-                "Vision/Camera" + Integer.toString(i) + "/Accepted_position",
-                accepted_poses.toArray(new Pose3d[accepted_poses.size()]));
-            Logger.recordOutput(
-                "Vision/Camera" + Integer.toString(i) + "/Rejected_positions",
-                rejected_poses.toArray(new Pose3d[rejected_poses.size()]));
- */
+            // logs data by camera
+            fields[i].getObject("EstimatedPoses").setPoses(robot_poses.stream().map(Pose3d::toPose2d).toList());
+            fields[i].getObject("AcceptedPoses").setPoses(accepted_poses.stream().map(Pose3d::toPose2d).toList());
+            fields[i].getObject("RejectedPoses").setPoses(rejected_poses.stream().map(Pose3d::toPose2d).toList());
         }
     }
 
