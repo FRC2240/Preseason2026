@@ -1,14 +1,11 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.Swerve;
 
 import static edu.wpi.first.units.Units.*;
 
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.MathUtil;
@@ -23,6 +20,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -39,10 +37,12 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
-public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
+public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
+
+    private Logger logger = new Logger();
 
     /* Driving configs */
     private CommandXboxController joystick;
@@ -53,8 +53,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             .withDeadband(Robot.MaxSpeed * 0.1)
             .withRotationalDeadband(Robot.MaxAngularRate * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+    private final SwerveRequest.Idle idle = new SwerveRequest.Idle();
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -78,11 +77,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
                     null, // Use default timeout (10 s)
                     // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+                    state -> SmartDashboard.putString("SysIdTranslation_State", state.toString())),
             new SysIdRoutine.Mechanism(
                     output -> setControl(m_translationCharacterization.withVolts(output)),
                     null,
                     this));
+
+
 
     /*
      * SysId routine for characterizing steer. This is used to find PID gains for
@@ -94,7 +95,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     Volts.of(7), // Use dynamic voltage of 7 V
                     null, // Use default timeout (10 s)
                     // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+                    state -> SmartDashboard.putString("SysIdSteer_State", state.toString())),
             new SysIdRoutine.Mechanism(
                     volts -> setControl(m_steerCharacterization.withVolts(volts)),
                     null,
@@ -115,13 +116,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     Volts.of(Math.PI),
                     null, // Use default timeout (10 s)
                     // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
+                    state -> SmartDashboard.putString("SysIdRotation_State", state.toString())),
             new SysIdRoutine.Mechanism(
                     output -> {
                         /* output is actually radians per second, but SysId only supports "volts" */
                         setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
                         /* also log the requested output for SysId */
-                        SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+                        SmartDashboard.putNumber("Rotational_Rate", output.in(Volts));
                     },
                     null,
                     this));
@@ -129,100 +130,25 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not
-     * construct
-     * the devices themselves. If they need the devices, they can access them
-     * through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param modules             Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-            SwerveDrivetrainConstants drivetrainConstants,
-            SwerveModuleConstants<?, ?, ?>... modules) {
-        super(drivetrainConstants, modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-    }
+    /* Constructor */
+    public Drivetrain(CommandXboxController joystick) {
+        // Uses TunerConstants values directly
+        // For more config, check all of the overrides for super
+        super(TunerConstants.DrivetrainConstants, 
+              TunerConstants.FrontLeft, 
+              TunerConstants.FrontRight,
+              TunerConstants.BackLeft, 
+              TunerConstants.BackRight);
 
-    public CommandSwerveDrivetrain(CommandXboxController joystick) {
-        super(TunerConstants.DrivetrainConstants, TunerConstants.FrontLeft, TunerConstants.FrontRight,
-                TunerConstants.BackLeft, TunerConstants.BackRight);
         this.joystick = joystick;
+
+        registerTelemetry(logger::telemeterize);
+
         if (Utils.isSimulation()) {
             startSimThread();
         }
     }
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not
-     * construct
-     * the devices themselves. If they need the devices, they can access them
-     * through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     *                                unspecified or set to 0 Hz, this is 250 Hz on
-     *                                CAN FD, and 100 Hz on CAN 2.0.
-     * @param modules                 Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-            SwerveDrivetrainConstants drivetrainConstants,
-            double odometryUpdateFrequency,
-            SwerveModuleConstants<?, ?, ?>... modules) {
-        super(drivetrainConstants, odometryUpdateFrequency, modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-    }
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not
-     * construct
-     * the devices themselves. If they need the devices, they can access them
-     * through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants       Drivetrain-wide constants for the swerve
-     *                                  drive
-     * @param odometryUpdateFrequency   The frequency to run the odometry loop. If
-     *                                  unspecified or set to 0 Hz, this is 250 Hz
-     *                                  on
-     *                                  CAN FD, and 100 Hz on CAN 2.0.
-     * @param odometryStandardDeviation The standard deviation for odometry
-     *                                  calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in
-     *                                  meters
-     *                                  and radians
-     * @param visionStandardDeviation   The standard deviation for vision
-     *                                  calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in
-     *                                  meters
-     *                                  and radians
-     * @param modules                   Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-            SwerveDrivetrainConstants drivetrainConstants,
-            double odometryUpdateFrequency,
-            Matrix<N3, N1> odometryStandardDeviation,
-            Matrix<N3, N1> visionStandardDeviation,
-            SwerveModuleConstants<?, ?, ?>... modules) {
-        super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation,
-                modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-    }
 
     /**
      * Returns a command that applies the specified control request to this swerve
@@ -336,6 +262,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Matrix<N3, N1> visionMeasurementStdDevs) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds),
                 visionMeasurementStdDevs);
+    }
+
+    public Command idleCommand() {
+        return applyRequest(() -> idle).ignoringDisable(true);
     }
 
     public Rotation2d getHeading() {
