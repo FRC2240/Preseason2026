@@ -10,9 +10,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.swerve.Drivetrain;
-import frc.robot.vision.RealLimelightVisionIO;
-import frc.robot.vision.SimPhotonVisionIO;
-import frc.robot.vision.Vision;
+import frc.robot.subsystems.vision.RealLimelightVisionIO;
+import frc.robot.subsystems.vision.SimPhotonVisionIO;
+import frc.robot.subsystems.vision.Vision;
 
 public class RobotContainer {
     private final CommandXboxController joystick = new CommandXboxController(0);

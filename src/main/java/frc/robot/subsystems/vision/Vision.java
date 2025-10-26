@@ -1,7 +1,8 @@
-package frc.robot.vision;
+package frc.robot.subsystems.vision;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.vision.BaseVisionIO.vision_configuration_type;
+import frc.robot.subsystems.vision.BaseVisionIO.BaseVisionIOInput;
+import frc.robot.subsystems.vision.BaseVisionIO.vision_configuration_type;
 
 import static frc.robot.Constants.Vision.ANGULAR_STDEV_COEFF;
 import static frc.robot.Constants.Vision.ANGULAR_STDEV_MEGATAG_2_COEFF;
@@ -23,8 +24,6 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-//import edu.wpi.first.wpilibj.Alert; disconnected logging
-import frc.robot.vision.BaseVisionIO.BaseVisionIOInput;
 
 public class Vision extends SubsystemBase {
 
