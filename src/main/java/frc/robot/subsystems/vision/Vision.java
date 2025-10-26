@@ -1,6 +1,8 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+import frc.robot.subsystems.swerve.Drivetrain;
 import frc.robot.subsystems.vision.BaseVisionIO.BaseVisionIOInput;
 import frc.robot.subsystems.vision.BaseVisionIO.vision_configuration_type;
 
@@ -22,10 +24,23 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Vision extends SubsystemBase {
+
+    public static Vision createVision(Drivetrain drivetrain) {
+        if (RobotBase.isReal()) {
+            return new Vision(drivetrain::addVisionMeasurement,
+                    new RealLimelightVisionIO("limelight-left", drivetrain::getHeading),
+                    new RealLimelightVisionIO("limelight-right", drivetrain::getHeading));
+        } else {
+            return new Vision(drivetrain::addVisionMeasurement,
+                    new SimPhotonVisionIO("camera_0", drivetrain::getPose, Constants.Vision.CAMERA_0_POS),
+                    new SimPhotonVisionIO("camera_1", drivetrain::getPose, Constants.Vision.CAMERA_0_POS));
+        }
+    }
 
     // empty but can hold an object that implements vision consumer
     private final vision_consumer consumer;

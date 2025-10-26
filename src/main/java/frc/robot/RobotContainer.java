@@ -4,33 +4,20 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.swerve.Drivetrain;
-import frc.robot.subsystems.vision.RealLimelightVisionIO;
-import frc.robot.subsystems.vision.SimPhotonVisionIO;
 import frc.robot.subsystems.vision.Vision;
 
 public class RobotContainer {
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final Drivetrain drivetrain = new Drivetrain(joystick);
-    public final Vision vision;
+    public final Vision vision = Vision.createVision(drivetrain);
 
     public RobotContainer() {
-        if (RobotBase.isReal()) {
-            vision = new Vision(drivetrain::addVisionMeasurement,
-                    new RealLimelightVisionIO("limelight-left", drivetrain::getHeading),
-                    new RealLimelightVisionIO("limelight-right", drivetrain::getHeading));
-        } else {
-            vision = new Vision(drivetrain::addVisionMeasurement,
-                    new SimPhotonVisionIO("camera_0", drivetrain::getPose, Constants.Vision.CAMERA_0_POS),
-                    new SimPhotonVisionIO("camera_1", drivetrain::getPose, Constants.Vision.CAMERA_0_POS));
-        }
-
         configureBindings();
     }
 
