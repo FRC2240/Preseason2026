@@ -1,4 +1,4 @@
-package frc.robot.subsystems.swervee;
+package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
