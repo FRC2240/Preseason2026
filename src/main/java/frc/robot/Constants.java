@@ -20,18 +20,20 @@ import frc.robot.generated.TunerConstants;
 public class Constants {
  public static class Robot {
      // kSpeedAt12Volts desired top speed;
-        public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-        public static double MaxAngularRate = RotationsPerSecond.of(1).in(RadiansPerSecond);
+        public static double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+        public static double MAX_ANGULAR_RATE = RotationsPerSecond.of(1).in(RadiansPerSecond);
 
-        public static double MaxSlowSpeed = MaxSpeed / 4;
-        public static double MaxSlowAngularRate = MaxAngularRate / 3;
+        public static double MAX_SLOW_SPEED = MAX_SPEED / 4;
+        public static double MAX_SLOW_ANGULAR_RATE = MAX_ANGULAR_RATE / 3;
 
-        public static PIDController TranslationController = new PIDController(5, 0, 1);
-        public static PIDController RotationController = new PIDController(5, 0, 0);
-        public static Distance TranslationDeadband = Inches.of(0.05);
-        public static Angle RotationDeadband = Degrees.of(0.05);
-        public static double ControllerCooldown = 0.3;
-        public static double ControllerThreshold = 0.2;
+        public static PIDController TRANSLATION_CONTROLLER = new PIDController(5, 0, 1);
+        public static PIDController ROTATION_CONTROLLER = new PIDController(5, 0, 0);
+
+        public static Distance TRANSLATION_THRESHOLD = Inches.of(0.05);
+        public static Angle ROTATION_THRESHOLD = Degrees.of(0.05);
+        
+        public static double CONTROLLER_COOLDOWN = 0.3;
+        public static double CONTROLLER_THRESHOLD = 0.2;
     }
 
     public static class Vision {

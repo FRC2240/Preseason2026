@@ -50,8 +50,8 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
 
     private final SwerveRequest.ApplyRobotSpeeds driveAlignment = new SwerveRequest.ApplyRobotSpeeds();
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(Robot.MaxSpeed * 0.1)
-            .withRotationalDeadband(Robot.MaxAngularRate * 0.1)
+            .withDeadband(Robot.MAX_SPEED * 0.1)
+            .withRotationalDeadband(Robot.MAX_ANGULAR_RATE * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.Idle idle = new SwerveRequest.Idle();
 
@@ -277,15 +277,15 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     }
 
     public Command driveCommand() {
-        return applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * Robot.MaxSpeed)
-                .withVelocityY(-joystick.getLeftX() * Robot.MaxSpeed)
-                .withRotationalRate(-joystick.getRightX() * Robot.MaxAngularRate));
+        return applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * Robot.MAX_SPEED)
+                .withVelocityY(-joystick.getLeftX() * Robot.MAX_SPEED)
+                .withRotationalRate(-joystick.getRightX() * Robot.MAX_ANGULAR_RATE));
     }
 
     public Command driveSlowCommand() {
-        return applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * Robot.MaxSlowSpeed)
-                .withVelocityY(-joystick.getLeftX() * Robot.MaxSlowSpeed)
-                .withRotationalRate(-joystick.getRightX() * Robot.MaxSlowAngularRate));
+        return applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * Robot.MAX_SLOW_SPEED)
+                .withVelocityY(-joystick.getLeftX() * Robot.MAX_SLOW_SPEED)
+                .withRotationalRate(-joystick.getRightX() * Robot.MAX_SLOW_ANGULAR_RATE));
     }
 
     public Command driveToPose(Pose2d target) {
@@ -299,15 +299,15 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             Rotation2d directionOfTravel = translationToTarget.getAngle();
             double linearDistance = translationToTarget.getNorm();
 
-            double velocityOutput = Math.min(Robot.TranslationController.calculate(linearDistance, 0), Robot.MaxSpeed);
+            double velocityOutput = Math.min(Robot.TRANSLATION_CONTROLLER.calculate(linearDistance, 0), Robot.MAX_SPEED);
             LinearVelocity xComponent = MetersPerSecond.of(-velocityOutput * directionOfTravel.getCos());
             LinearVelocity yComponent = MetersPerSecond.of(-velocityOutput * directionOfTravel.getSin());
 
             // Gets angle
             double rotationDistRadians = target.getRotation().minus(currentPose.getRotation()).getRadians();
             AngularVelocity omega = RadiansPerSecond
-                    .of(MathUtil.clamp(-Robot.RotationController.calculate(rotationDistRadians, 0),
-                            -Robot.MaxAngularRate, Robot.MaxAngularRate));
+                    .of(MathUtil.clamp(-Robot.ROTATION_CONTROLLER.calculate(rotationDistRadians, 0),
+                            -Robot.MAX_ANGULAR_RATE, Robot.MAX_ANGULAR_RATE));
 
             ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                     xComponent, yComponent, omega, currentPose.getRotation());
@@ -317,15 +317,15 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             // Until close enough to the pose
             Pose2d currentPose = getState().Pose;
 
-            return currentPose.getRotation().getMeasure().isNear(target.getRotation().getMeasure(), Robot.RotationDeadband) &&
-                   currentPose.getTranslation().getMeasureX().isNear(target.getTranslation().getMeasureX(), Robot.TranslationDeadband) &&
-                   currentPose.getTranslation().getMeasureY().isNear(target.getTranslation().getMeasureY(), Robot.TranslationDeadband);
+            return currentPose.getRotation().getMeasure().isNear(target.getRotation().getMeasure(), Robot.ROTATION_THRESHOLD) &&
+                   currentPose.getTranslation().getMeasureX().isNear(target.getTranslation().getMeasureX(), Robot.TRANSLATION_THRESHOLD) &&
+                   currentPose.getTranslation().getMeasureY().isNear(target.getTranslation().getMeasureY(), Robot.TRANSLATION_THRESHOLD);
         }).until(() -> {
-            return joystickTimer.hasElapsed(Robot.ControllerCooldown) &&
-                    (Math.abs(joystick.getRightX()) > Robot.ControllerThreshold ||
-                     Math.abs(joystick.getRightY()) > Robot.ControllerThreshold ||
-                     Math.abs(joystick.getLeftX()) > Robot.ControllerThreshold ||
-                     Math.abs(joystick.getLeftY()) > Robot.ControllerThreshold);
+            return joystickTimer.hasElapsed(Robot.CONTROLLER_COOLDOWN) &&
+                    (Math.abs(joystick.getRightX()) > Robot.CONTROLLER_THRESHOLD ||
+                     Math.abs(joystick.getRightY()) > Robot.CONTROLLER_THRESHOLD ||
+                     Math.abs(joystick.getLeftX()) > Robot.CONTROLLER_THRESHOLD ||
+                     Math.abs(joystick.getLeftY()) > Robot.CONTROLLER_THRESHOLD);
         }));
     }
 }
