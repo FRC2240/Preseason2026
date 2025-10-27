@@ -19,8 +19,7 @@ import frc.robot.generated.TunerConstants;
 
 public class Constants {
  public static class Robot {
-     // kSpeedAt12Volts desired top speed;
-        public static double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+        public static double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed;
         public static double MAX_ANGULAR_RATE = RotationsPerSecond.of(1).in(RadiansPerSecond);
 
         public static double MAX_SLOW_SPEED = MAX_SPEED / 4;
@@ -31,7 +30,7 @@ public class Constants {
 
         public static Distance TRANSLATION_THRESHOLD = Inches.of(0.05);
         public static Angle ROTATION_THRESHOLD = Degrees.of(0.05);
-        
+
         public static double CONTROLLER_COOLDOWN = 0.3;
         public static double CONTROLLER_THRESHOLD = 0.2;
     }

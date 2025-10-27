@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -55,12 +56,8 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.Idle idle = new SwerveRequest.Idle();
 
-    /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
-    private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
-    /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
-    private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
-    /* Keep track if we've ever applied the operator perspective before or not */
-    private boolean m_hasAppliedOperatorPerspective = false;
+    // For gyro zeroing with alliance.
+    private Alliance currentPerspective = Alliance.Red;
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -186,25 +183,31 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     @Override
     public void periodic() {
         /*
-         * Periodically try to apply the operator perspective.
-         * If we haven't applied the operator perspective before, then we should apply
-         * it regardless of DS state.
-         * This allows us to correct the perspective in case the robot code restarts
-         * mid-match.
-         * Otherwise, only check and apply the operator perspective if the DS is
-         * disabled.
-         * This ensures driving behavior doesn't change until an explicit disable event
-         * occurs during testing.
+         * If the robot is disabled (for safety), and the robot's current 
+         * yaw is not inline with the alliance, swap it.
          */
-        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
+
+        if (DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                        allianceColor == Alliance.Red
-                                ? kRedAlliancePerspectiveRotation
-                                : kBlueAlliancePerspectiveRotation);
-                m_hasAppliedOperatorPerspective = true;
+                if (allianceColor == currentPerspective) return;
+
+                Angle currentYaw = getPigeon2().getYaw().getValue();
+                getPigeon2().setYaw(currentYaw.plus(Degrees.of(180)));
+                currentPerspective = allianceColor;
             });
         }
+    }
+
+    public Command zeroGyroWithAllianceCommand() {
+        /*
+         * Does not set the drivetrain as a requrirement because
+         * that might override driving and that wouldnt be good.
+         * 
+         * Ignores disabled to be able to do it in disabled
+         */
+        return Commands.runOnce(() -> {
+            getPigeon2().setYaw(currentPerspective == Alliance.Red? 0:180);
+        }).ignoringDisable(true);
     }
 
     private void startSimThread() {

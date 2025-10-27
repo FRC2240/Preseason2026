@@ -25,7 +25,7 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(drivetrain.driveCommand());
         joystick.b().toggleOnTrue(drivetrain.driveSlowCommand()); // Drives slow
         RobotModeTriggers.disabled().whileTrue(drivetrain.idleCommand()); // Idles the swerve on disable
-        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())); // Rezero Gyro
+        joystick.button(1).onTrue(drivetrain.zeroGyroWithAllianceCommand()); // Rezero Gyro with alliance
     }
 
     public Command getAutonomousCommand() {
