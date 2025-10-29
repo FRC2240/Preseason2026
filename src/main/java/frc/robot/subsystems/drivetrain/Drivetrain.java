@@ -57,7 +57,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private final SwerveRequest.Idle idle = new SwerveRequest.Idle();
 
     // For gyro zeroing with alliance.
-    private Alliance currentPerspective = Alliance.Red;
+    private Alliance currentPerspective = null;
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -190,6 +190,12 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         if (DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
                 if (allianceColor == currentPerspective) return;
+
+                if (allianceColor == null) {
+                    getPigeon2().setYaw(currentPerspective == Alliance.Red? 0:180);
+                    currentPerspective = allianceColor;
+                    return;
+                }
 
                 Angle currentYaw = getPigeon2().getYaw().getValue();
                 getPigeon2().setYaw(currentYaw.plus(Degrees.of(180)));

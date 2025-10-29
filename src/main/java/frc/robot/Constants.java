@@ -49,7 +49,7 @@ public class Constants {
         public static Transform3d CAMERA_1_POS = new Transform3d(0.272575, 0.2413, 0.510699, new Rotation3d(Degrees.of(0), Degrees.of(-32), Degrees.of(20))); 
     
         public static double MAX_UNCERTAINTY = 0.3; // TBD
-        public static double MAX_Z_ERROR = 0.75; //TBD
+        public static double MAX_Z_ERROR = 0.2; //TBD
     
         // Standard deviation coefficents, for 1 meter distance and 1 tag
         // (Adjusted automatically based on distance and # of tags)
