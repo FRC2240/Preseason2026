@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Shooter;
+package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
@@ -10,13 +10,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class ShooterSubsystem extends SubsystemBase{
+public class Shooter extends SubsystemBase{
     public TalonFX motorA = new TalonFX(39);
     public TalonFX motorR = new TalonFX(38);
 
     MotionMagicTorqueCurrentFOC req = new MotionMagicTorqueCurrentFOC(0);
 
-    public ShooterSubsystem() {
+    public Shooter() {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
 
         cfg.CurrentLimits.SupplyCurrentLimit = 3;
