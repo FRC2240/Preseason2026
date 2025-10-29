@@ -35,9 +35,14 @@ public class Constants {
         public static double CONTROLLER_THRESHOLD = 0.2;
     }
 
+    public static class Field {
+        public static AprilTagFieldLayout APRIL_TAG_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+        public static double FIELD_LENGTH = APRIL_TAG_LAYOUT.getFieldLength();
+        public static double FIELD_WIDTH = APRIL_TAG_LAYOUT.getFieldWidth();
+    }
+
     public static class Vision {
         //stores tag layout for the current year's feild
-        public static AprilTagFieldLayout APRIL_TAG_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
     
         //assuming stores distance of cameras from center of bot
         public static Transform3d CAMERA_0_POS = new Transform3d(-0.272575, 0.2413, 0.520699, new Rotation3d(Degrees.of(0), Degrees.of(-32), Degrees.of(-20))); 
