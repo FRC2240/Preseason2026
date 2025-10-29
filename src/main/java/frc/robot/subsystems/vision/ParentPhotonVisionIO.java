@@ -5,7 +5,7 @@ import java.util.Set;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-import static frc.robot.Constants.Vision.APRIL_TAG_LAYOUT;
+import static frc.robot.Constants.Field.APRIL_TAG_LAYOUT;
 
 import java.util.HashSet;
 import java.util.List;

@@ -10,7 +10,7 @@ import static frc.robot.Constants.Vision.ANGULAR_STDEV_COEFF;
 import static frc.robot.Constants.Vision.ANGULAR_STDEV_MEGATAG_2_COEFF;
 import static frc.robot.Constants.Vision.LINEAR_STDEV_COEFF;
 import static frc.robot.Constants.Vision.LINEAR_STDEV_MEGATAG_2_COEFF;
-import static frc.robot.Constants.Vision.APRIL_TAG_LAYOUT;
+import static frc.robot.Constants.Field.APRIL_TAG_LAYOUT;
 import static frc.robot.Constants.Vision.MAX_UNCERTAINTY;
 import static frc.robot.Constants.Vision.MAX_Z_ERROR;
 

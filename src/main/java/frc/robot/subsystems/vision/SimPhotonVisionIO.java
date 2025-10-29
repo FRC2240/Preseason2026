@@ -7,7 +7,7 @@ import org.photonvision.simulation.VisionSystemSim;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
 
-import static frc.robot.Constants.Vision.APRIL_TAG_LAYOUT;
+import static frc.robot.Constants.Field.APRIL_TAG_LAYOUT;
 
 import java.util.function.Supplier;
 
