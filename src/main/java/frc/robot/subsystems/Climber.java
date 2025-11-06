@@ -13,11 +13,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 public class Climber extends SubsystemBase{
     public TalonFX motorC = new TalonFX(67); //Change id (Climber) 
-    
-    MotionMagicTorqueCurrentFOC req = new MotionMagicTorqueCurrentFOC(0);
 
     public void setClimberPosition(AngleUnit rotations) {
-        motorC.setControl(req.withPosition(Angle.ofBaseUnits(10, rotations)));
+        motorC.setPosition(Angle.ofBaseUnits(10, rotations));
     }
 
     public StatusSignal<Angle> getPosition(){
