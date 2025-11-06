@@ -4,8 +4,13 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.MathUtil;
@@ -21,7 +26,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -30,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
 import frc.robot.Constants.Robot;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
@@ -43,16 +48,17 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
-    private Logger logger = new Logger();
+    private Logger logger = new Logger(Constants.Robot.MAX_SPEED);
 
     /* Driving configs */
     private CommandXboxController joystick;
     private Timer joystickTimer = new Timer();
 
+    private final SwerveRequest.ApplyRobotSpeeds pathplannerApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
     private final SwerveRequest.ApplyRobotSpeeds driveAlignment = new SwerveRequest.ApplyRobotSpeeds();
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(Robot.MAX_SPEED * 0.1)
-            .withRotationalDeadband(Robot.MAX_ANGULAR_RATE * 0.1)
+            .withRotationalDeadband(Robot.MAX_ANGULAR_RATE * 0.2)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.Idle idle = new SwerveRequest.Idle();
 
@@ -74,13 +80,11 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
                     Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
                     null, // Use default timeout (10 s)
                     // Log state with SignalLogger class
-                    state -> SmartDashboard.putString("SysIdTranslation_State", state.toString())),
+                    state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
             new SysIdRoutine.Mechanism(
                     output -> setControl(m_translationCharacterization.withVolts(output)),
                     null,
                     this));
-
-
 
     /*
      * SysId routine for characterizing steer. This is used to find PID gains for
@@ -92,7 +96,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
                     Volts.of(7), // Use dynamic voltage of 7 V
                     null, // Use default timeout (10 s)
                     // Log state with SignalLogger class
-                    state -> SmartDashboard.putString("SysIdSteer_State", state.toString())),
+                    state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
             new SysIdRoutine.Mechanism(
                     volts -> setControl(m_steerCharacterization.withVolts(volts)),
                     null,
@@ -113,13 +117,13 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
                     Volts.of(Math.PI),
                     null, // Use default timeout (10 s)
                     // Log state with SignalLogger class
-                    state -> SmartDashboard.putString("SysIdRotation_State", state.toString())),
+                    state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
             new SysIdRoutine.Mechanism(
                     output -> {
                         /* output is actually radians per second, but SysId only supports "volts" */
                         setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
                         /* also log the requested output for SysId */
-                        SmartDashboard.putNumber("Rotational_Rate", output.in(Volts));
+                        SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
                     },
                     null,
                     this));
@@ -131,11 +135,11 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     public Drivetrain(CommandXboxController joystick) {
         // Uses TunerConstants values directly
         // For more config, check all of the overrides for super
-        super(TunerConstants.DrivetrainConstants, 
-              TunerConstants.FrontLeft, 
-              TunerConstants.FrontRight,
-              TunerConstants.BackLeft, 
-              TunerConstants.BackRight);
+        super(TunerConstants.DrivetrainConstants,
+                TunerConstants.FrontLeft,
+                TunerConstants.FrontRight,
+                TunerConstants.BackLeft,
+                TunerConstants.BackRight);
 
         this.joystick = joystick;
 
@@ -144,8 +148,39 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        setupPathPlanner();
     }
 
+    private void setupPathPlanner() {
+        try {
+            var config = RobotConfig.fromGUISettings();
+            AutoBuilder.configure(
+                    () -> getState().Pose, // Supplier of current robot pose
+                    this::resetPose, // Consumer for seeding pose against auto
+                    () -> getState().Speeds, // Supplier of current robot speeds
+                    // Consumer of ChassisSpeeds and feedforwards to drive the robot
+                    (speeds, feedforwards) -> setControl(
+                            pathplannerApplyRobotSpeeds.withSpeeds(speeds)
+                                    .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                                    .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
+                    new PPHolonomicDriveController(
+                            // PID constants for translation
+                            new PIDConstants(10, 0, 0),
+                            // PID constants for rotation
+                            new PIDConstants(7, 0, 0)),
+                    config,
+                    // Assume the path needs to be flipped for Red vs Blue, this is normally the
+                    // case
+                    () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                    this // Subsystem for requirements
+            );
+        } catch (Exception ex) {
+            DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder",
+                    ex.getStackTrace());
+        }
+
+    }
 
     /**
      * Returns a command that applies the specified control request to this swerve
@@ -183,16 +218,17 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     @Override
     public void periodic() {
         /*
-         * If the robot is disabled (for safety), and the robot's current 
+         * If the robot is disabled (for safety), and the robot's current
          * yaw is not inline with the alliance, swap it.
          */
 
         if (DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
-                if (allianceColor == currentPerspective) return;
+                if (allianceColor == currentPerspective)
+                    return;
 
                 if (allianceColor == null) {
-                    getPigeon2().setYaw(currentPerspective == Alliance.Red? 0:180);
+                    getPigeon2().setYaw(currentPerspective == Alliance.Red ? 0 : 180);
                     currentPerspective = allianceColor;
                     return;
                 }
@@ -212,7 +248,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
          * Ignores disabled to be able to do it in disabled
          */
         return Commands.runOnce(() -> {
-            getPigeon2().setYaw(currentPerspective == Alliance.Red? 0:180);
+            getPigeon2().setYaw(currentPerspective == Alliance.Red ? 0 : 180);
         }).ignoringDisable(true);
     }
 
@@ -308,7 +344,8 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             Rotation2d directionOfTravel = translationToTarget.getAngle();
             double linearDistance = translationToTarget.getNorm();
 
-            double velocityOutput = Math.min(Robot.TRANSLATION_CONTROLLER.calculate(linearDistance, 0), Robot.MAX_SPEED);
+            double velocityOutput = Math.min(Robot.TRANSLATION_CONTROLLER.calculate(linearDistance, 0),
+                    Robot.MAX_SPEED);
             LinearVelocity xComponent = MetersPerSecond.of(-velocityOutput * directionOfTravel.getCos());
             LinearVelocity yComponent = MetersPerSecond.of(-velocityOutput * directionOfTravel.getSin());
 
@@ -326,15 +363,19 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             // Until close enough to the pose
             Pose2d currentPose = getState().Pose;
 
-            return currentPose.getRotation().getMeasure().isNear(target.getRotation().getMeasure(), Robot.ROTATION_THRESHOLD) &&
-                   currentPose.getTranslation().getMeasureX().isNear(target.getTranslation().getMeasureX(), Robot.TRANSLATION_THRESHOLD) &&
-                   currentPose.getTranslation().getMeasureY().isNear(target.getTranslation().getMeasureY(), Robot.TRANSLATION_THRESHOLD);
+            return currentPose.getRotation().getMeasure().isNear(target.getRotation().getMeasure(),
+                    Robot.ROTATION_THRESHOLD) &&
+                    currentPose.getTranslation().getMeasureX().isNear(target.getTranslation().getMeasureX(),
+                            Robot.TRANSLATION_THRESHOLD)
+                    &&
+                    currentPose.getTranslation().getMeasureY().isNear(target.getTranslation().getMeasureY(),
+                            Robot.TRANSLATION_THRESHOLD);
         }).until(() -> {
             return joystickTimer.hasElapsed(Robot.CONTROLLER_COOLDOWN) &&
                     (Math.abs(joystick.getRightX()) > Robot.CONTROLLER_THRESHOLD ||
-                     Math.abs(joystick.getRightY()) > Robot.CONTROLLER_THRESHOLD ||
-                     Math.abs(joystick.getLeftX()) > Robot.CONTROLLER_THRESHOLD ||
-                     Math.abs(joystick.getLeftY()) > Robot.CONTROLLER_THRESHOLD);
+                            Math.abs(joystick.getRightY()) > Robot.CONTROLLER_THRESHOLD ||
+                            Math.abs(joystick.getLeftX()) > Robot.CONTROLLER_THRESHOLD ||
+                            Math.abs(joystick.getLeftY()) > Robot.CONTROLLER_THRESHOLD);
         }));
     }
 }
