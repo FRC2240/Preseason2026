@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-<<<<<<< HEAD
 public class Climber extends SubsystemBase {
     public TalonFX climber = new TalonFX(Constants.Climber.CLIMBER_MOTOR_ID);
     MotionMagicTorqueCurrentFOC req = new MotionMagicTorqueCurrentFOC(0);
@@ -20,13 +19,6 @@ public class Climber extends SubsystemBase {
         cfg.CurrentLimits.SupplyCurrentLimit = 3;
 
         climber.getConfigurator().apply(cfg);
-=======
-public class Climber extends SubsystemBase{
-    public TalonFX motorC = new TalonFX(67); //Change id (Climber) 
-
-    public void setClimberPosition(AngleUnit rotations) {
-        motorC.setPosition(Angle.ofBaseUnits(10, rotations));
->>>>>>> c1fd76b (hi)
     }
 
     public void setPosition(Angle rotations) {
