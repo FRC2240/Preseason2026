@@ -32,10 +32,6 @@ public class Shooter extends SubsystemBase{
         motorR.set(spd);
     }
 
-    public void shoot() {
-        // Remove if the idex is what pushes note in so it gets shot
-    }
-
 
     public Command shooterAngleCommand(AngleUnit rotations) {
         return Commands.runOnce(() -> {
@@ -47,12 +43,6 @@ public class Shooter extends SubsystemBase{
     public Command shooterOutputCommand(double spd) {
         return Commands.run(() -> {
             setShooterOutput(spd);
-        }, this);
-    }
-
-    public Command shootCommand() {
-        return Commands.runOnce(() -> {
-            shoot();
         }, this);
     }
 }
