@@ -32,10 +32,10 @@ public class Elevator extends SubsystemBase{
 
         conf.Slot0.GravityType = GravityTypeValue.Elevator_Static;
 
+        right_motor.setControl(new Follower(Constants.Elevator.MOTOR_ID, true));
+
         left_motor.getConfigurator().apply(conf);
         right_motor.getConfigurator().apply(conf);
-
-        right_motor.setControl(new Follower(Constants.Elevator.MOTOR_ID, true));
     }
 
     public Angle getPosition(){
@@ -49,6 +49,12 @@ public class Elevator extends SubsystemBase{
             return getPosition().isNear(Position, Constants.Elevator.POSITION_THRESHOLD);
         });
     }
+    public Command elevatorOffsetsCommand(Angle amount) {
+        return Commands.runOnce(() -> {
+            left_motor.setControl(req.withPosition(getPosition().plus(amount)));
+        });
+    };
+    
 
 
 }

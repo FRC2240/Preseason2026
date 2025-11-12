@@ -68,6 +68,9 @@ public class Constants {
     public static class Elevator {
         public static int MOTOR_ID = 105; //Change
         public static int MOTOR_ID_FOLLOW = 106; //Change
+        
         public static Angle POSITION_THRESHOLD = Rotations.of(2);
+        public static final Angle OFFSET_AMOUNT = Rotations.of(3);
+        public static final Angle DEFAULT = Rotations.of(0);
     }
 }
