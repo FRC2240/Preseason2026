@@ -2,6 +2,7 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -61,9 +62,6 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             .withRotationalDeadband(Robot.MAX_ANGULAR_RATE * 0.2)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.Idle idle = new SwerveRequest.Idle();
-
-    // For gyro zeroing with alliance.
-    private Alliance currentPerspective = null;
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -215,30 +213,31 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
+
+    private Alliance currentAlliancePerspective = Alliance.Red;
+
     @Override
     public void periodic() {
         /*
-         * If the robot is disabled (for safety), and the robot's current
-         * yaw is not inline with the alliance, swap it.
+         * Undefined/Red -> Red
+         * Undefined/Red -> Blue
+         * Red -> Blue
+         * Blue -> Red
          */
 
-        if (DriverStation.isDisabled()) {
-            DriverStation.getAlliance().ifPresent(allianceColor -> {
-                if (allianceColor == currentPerspective)
-                    return;
+         // This operation should only be preformed in disabled for safetey reasons
+        if (DriverStation.isEnabled()) return;
 
-                if (allianceColor == null) {
-                    getPigeon2().setYaw(currentPerspective == Alliance.Red ? 0 : 180);
-                    currentPerspective = allianceColor;
-                    return;
-                }
+        Optional<Alliance> rawAlliance = DriverStation.getAlliance();
+        Alliance alliance = rawAlliance.isPresent()? rawAlliance.get() : Alliance.Red;
 
-                Angle currentYaw = getPigeon2().getYaw().getValue();
-                getPigeon2().setYaw(currentYaw.plus(Degrees.of(180)));
-                currentPerspective = allianceColor;
-            });
+        if (!currentAlliancePerspective.equals(alliance)) {
+            // Flip gyro by 180
+            var currentYaw = getPigeon2().getYaw().getValue();
+            getPigeon2().setYaw(currentYaw.plus(Degrees.of(180)));
         }
     }
+
 
     public Command zeroGyroWithAllianceCommand() {
         /*
@@ -248,7 +247,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
          * Ignores disabled to be able to do it in disabled
          */
         return Commands.runOnce(() -> {
-            getPigeon2().setYaw(currentPerspective == Alliance.Red ? 0 : 180);
+            getPigeon2().setYaw(currentAlliancePerspective == Alliance.Red ? 0 : 180);
         }).ignoringDisable(true);
     }
 
@@ -267,20 +266,6 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
 
-    /**
-     * Adds a vision measurement to the Kalman Filter. This will correct the
-     * odometry pose estimate
-     * while still accounting for measurement noise.
-     *
-     * @param visionRobotPoseMeters The pose of the robot as measured by the vision
-     *                              camera.
-     * @param timestampSeconds      The timestamp of the vision measurement in
-     *                              seconds.
-     */
-    @Override
-    public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds));
-    }
 
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the
