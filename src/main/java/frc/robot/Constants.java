@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -63,5 +64,13 @@ public class Constants {
 
     public static class Shooter {
         public static Current MAXCURRENT = Amps.of(3);
+    }
+    public static class Elevator {
+        public static int MOTOR_ID = 105; //Change
+        public static int MOTOR_ID_FOLLOW = 106; //Change
+        
+        public static Angle POSITION_THRESHOLD = Rotations.of(2);
+        public static final Angle OFFSET_AMOUNT = Rotations.of(3);
+        public static final Angle DEFAULT = Rotations.of(0);
     }
 }
