@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Millimeter;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -72,5 +73,12 @@ public class Constants {
         public static Angle POSITION_THRESHOLD = Rotations.of(2);
         public static final Angle OFFSET_AMOUNT = Rotations.of(3);
         public static final Angle DEFAULT = Rotations.of(0);
+    }
+    public static class Grabber {
+        public static Distance INTAKE_Distance = Millimeter.of(35);
+        public static Current INTAKE_VELOCITY = Amps.of(10); //Placeholder Value
+        public static Current EJECT_VELOCITY = Amps.of(10); //Placeholder Value
+        public static int MOTOR_ID = 19;
+        public static int SENSOR_ID = 11; 
     }
 }
