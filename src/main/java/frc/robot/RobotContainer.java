@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.ObjectDetection;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.*;
 
 public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
@@ -25,6 +26,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain = new Drivetrain(joystick);
     public final Vision vision = Vision.createVision(drivetrain);
     public final ObjectDetection objectDetection = new ObjectDetection("limelight-left", Constants.Vision.CAMERA_0_POS ,drivetrain::getPose);
+    public final Elevator elevator = new Elevator();
 
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser();
