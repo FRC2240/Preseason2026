@@ -8,24 +8,30 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Indexer extends SubsystemBase{
-    public TalonFX motorI = new TalonFX(100); //Change id (Intaking)
-    public TalonFX motorS = new TalonFX(101); //Change id (Shooting)
+public class Indexer extends SubsystemBase {
+    public TalonFX indexer = new TalonFX(100); // Change id (Intaking)
+    public TalonFX loader = new TalonFX(101); // Change id (Shooting)
     MotionMagicVelocityTorqueCurrentFOC req = new MotionMagicVelocityTorqueCurrentFOC(0);
 
     public Indexer() {
-        TalonFXConfiguration index = new TalonFXConfiguration();
-        index.CurrentLimits.SupplyCurrentLimit = 3;
+        TalonFXConfiguration indexCfg = new TalonFXConfiguration();
+        indexCfg.CurrentLimits.SupplyCurrentLimit = 3;
+
+        TalonFXConfiguration loadCfg = new TalonFXConfiguration();
+        loadCfg.CurrentLimits.SupplyCurrentLimit = 3;
+
+        indexer.getConfigurator().apply(indexCfg);
+        loader.getConfigurator().apply(loadCfg);
     }
-    
+
     public void setIndexerSpeed(Double Speed) {
-        motorI.setControl(req.withVelocity(Speed)); //Units is rotations/s
+        indexer.setControl(req.withVelocity(Speed)); // Units is rotations/s
     }
 
     public void Shoot() {
-        motorS.setControl(req.withVelocity(5)); //Units is rotations/s
+        loader.setControl(req.withVelocity(5)); // Units is rotations/s
     }
-    
+
     public Command indexerSpeedCommand(Double Speed) {
         return Commands.runOnce(() -> {
             setIndexerSpeed(Speed);
@@ -38,5 +44,4 @@ public class Indexer extends SubsystemBase{
         }, this);
     }
 
-    
 }
