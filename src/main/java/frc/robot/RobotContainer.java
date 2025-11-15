@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.Grabber;
 import frc.robot.Constants.Shooter;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.ObjectDetection;
 import frc.robot.subsystems.Wrist;
@@ -33,6 +34,7 @@ public class RobotContainer {
     public final Shooter shooter = new Shooter();
     public final Wrist wrist = new Wrist();
     public final Elevator elevator = new Elevator();
+    public final Climber climber = new Climber();
     
     
     public RobotContainer() {
