@@ -64,7 +64,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(Robot.MAX_SPEED * 0.1)
             .withRotationalDeadband(Robot.MAX_ANGULAR_RATE * 0.2)
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+            .withDriveRequestType(DriveRequestType.Velocity); // Use open-loop control for drive motors
     private final SwerveRequest.Idle idle = new SwerveRequest.Idle();
 
     /* Swerve requests to apply during SysId characterization */
@@ -76,7 +76,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
      * SysId routine for characterizing translation. This is used to find PID gains
      * for the drive motors.
      */
-    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
+    private final SysIdRoutine sysIdRoutineDrive = new SysIdRoutine(
             new SysIdRoutine.Config(
                     null, // Use default ramp rate (1 V/s)
                     Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
@@ -85,10 +85,10 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
                     state -> SmartDashboard.putString("SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                     output -> setControl(m_translationCharacterization.withVolts(output)),
-                    this::logSysId,
+                    this::logSysIdDrive,
                     this));
 
-    private void logSysId(SysIdRoutineLog log) {
+    private void logSysIdDrive(SysIdRoutineLog log) {
         var modules = getModules();
         for (int i = 0; i < 4; i++) {
             var module = modules[i];
@@ -96,53 +96,44 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             TalonFX angleMotor = module.getSteerMotor();
             CANcoder encoder = module.getEncoder();
 
-            log.motor("drive-motor-" + i).voltage(driveMotor.getMotorVoltage().getValue()).angularPosition(driveMotor.getPosition().getValue()).angularVelocity(driveMotor.getVelocity().getValue());
+            log.motor("drive-motor-" + i).voltage(driveMotor.getMotorVoltage().getValue())
+                    .angularPosition(driveMotor.getPosition().getValue())
+                    .angularVelocity(driveMotor.getVelocity().getValue());
         }
     }
+
     /*
      * SysId routine for characterizing steer. This is used to find PID gains for
      * the steer motors.
      */
-    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
+    private final SysIdRoutine sysIdRoutineSteer = new SysIdRoutine(
             new SysIdRoutine.Config(
                     null, // Use default ramp rate (1 V/s)
                     Volts.of(7), // Use dynamic voltage of 7 V
                     null, // Use default timeout (10 s)
                     // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+                    state -> SmartDashboard.putString("SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                     volts -> setControl(m_steerCharacterization.withVolts(volts)),
-                    null,
+                    this::logSysIdSteer,
                     this));
 
-    /*
-     * SysId routine for characterizing rotation.
-     * This is used to find PID gains for the FieldCentricFacingAngle
-     * HeadingController.
-     * See the documentation of SwerveRequest.SysIdSwerveRotation for info on
-     * importing the log to SysId.
-     */
-    private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    /* This is in radians per second², but SysId only supports "volts per second" */
-                    Volts.of(Math.PI / 6).per(Second),
-                    /* This is in radians per second, but SysId only supports "volts" */
-                    Volts.of(Math.PI),
-                    null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
-            new SysIdRoutine.Mechanism(
-                    output -> {
-                        /* output is actually radians per second, but SysId only supports "volts" */
-                        setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
-                        /* also log the requested output for SysId */
-                        SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
-                    },
-                    null,
-                    this));
+    private void logSysIdSteer(SysIdRoutineLog log) {
+        var modules = getModules();
+        for (int i = 0; i < 4; i++) {
+            var module = modules[i];
+            TalonFX driveMotor = module.getDriveMotor();
+            TalonFX angleMotor = module.getSteerMotor();
+            CANcoder encoder = module.getEncoder();
+
+            log.motor("steer-motor-" + i).voltage(angleMotor.getMotorVoltage().getValue())
+                    .angularPosition(encoder.getPosition().getValue())
+                    .angularVelocity(encoder.getVelocity().getValue());
+        }
+    }
 
     /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+    private SysIdRoutine m_sysIdRoutineToApply = sysIdRoutineSteer;
 
     /* Constructor */
     public Drivetrain(CommandXboxController joystick) {
@@ -228,7 +219,6 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
-
     private Alliance currentAlliancePerspective = Alliance.Red;
 
     @Override
@@ -240,11 +230,12 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
          * Blue -> Red
          */
 
-         // This operation should only be preformed in disabled for safetey reasons
-        if (DriverStation.isEnabled()) return;
+        // This operation should only be preformed in disabled for safetey reasons
+        if (DriverStation.isEnabled())
+            return;
 
         Optional<Alliance> rawAlliance = DriverStation.getAlliance();
-        Alliance alliance = rawAlliance.isPresent()? rawAlliance.get() : Alliance.Red;
+        Alliance alliance = rawAlliance.isPresent() ? rawAlliance.get() : Alliance.Red;
 
         if (!currentAlliancePerspective.equals(alliance)) {
             // Flip gyro by 180
@@ -252,7 +243,6 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             getPigeon2().setYaw(currentYaw.plus(Degrees.of(180)));
         }
     }
-
 
     public Command zeroGyroWithAllianceCommand() {
         /*
@@ -280,7 +270,6 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
-
 
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the
