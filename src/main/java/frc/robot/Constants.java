@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotation;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Millimeter;
@@ -74,6 +75,12 @@ public class Constants {
     public static class Indexer {
         public static int INDEXER_MOTOR_ID = 109;
         public static int LOADER_MOTOR_ID = 110;
+    }
+
+    public static class Wrist {
+        public static int WRIST_MOTOR_ID = 111;
+        public static Angle POSITION_THRESHOLD = Rotation.of(3);
+        //of.Rotations.of(1)
     }
 
     public static class Elevator {
