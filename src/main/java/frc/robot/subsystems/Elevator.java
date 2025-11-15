@@ -40,11 +40,11 @@ public class Elevator extends SubsystemBase {
         return leftMotor.getPosition().getValue();
     }
 
-    public Command setPositionCommand(Angle Position) {
+    public Command setPositionCommand(Angle position) {
         return Commands.runOnce(() -> {
-            leftMotor.setControl(req.withPosition(Position));
+            leftMotor.setControl(req.withPosition(position));
         }, this).withName("Set Elevator Position").until(() -> {
-            return getPosition().isNear(Position, Constants.Elevator.POSITION_THRESHOLD);
+            return getPosition().isNear(position, Constants.Elevator.POSITION_THRESHOLD);
         });
     }
 

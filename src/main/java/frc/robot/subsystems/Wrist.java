@@ -1,16 +1,17 @@
 package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import frc.robot.Constants;
+
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 
 public class Wrist extends SubsystemBase{
-    private final TalonFX wrist = new TalonFX(88);
+    private TalonFX wrist = new TalonFX(Constants.Wrist.WRIST_MOTOR_ID);
     MotionMagicTorqueCurrentFOC req = new MotionMagicTorqueCurrentFOC(0);
 
     public Wrist() {
@@ -22,13 +23,21 @@ public class Wrist extends SubsystemBase{
         wrist.getConfigurator().apply(cfg);
     }
 
-    public void setPosition(AngleUnit rotations) {
-         wrist.setControl(req.withPosition(Angle.ofBaseUnits(10, rotations)));
+    public void setPosition(Angle rotations) {
+         wrist.setControl(req.withPosition(rotations));
     }
 
-    public Command setPositionCommand(AngleUnit rotations) {
+public Angle getPosition() {
+    return wrist.getPosition().getValue();
+}
+
+    public Command setPositionCommand(Angle rotations) {
         return Commands.run(() -> {
             setPosition(rotations);
-        }, this);
-    } 
+        }, this).until (() -> {
+            return getPosition().isNear(rotations, Constants.Wrist.POSITION_THRESHOLD);
+    }); 
 }
+
+}
+

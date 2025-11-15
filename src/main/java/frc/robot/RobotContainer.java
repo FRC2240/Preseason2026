@@ -12,7 +12,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Constants.Grabber;
+import frc.robot.Constants.Shooter;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.ObjectDetection;
+import frc.robot.subsystems.Wrist;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.vision.Vision;
 
@@ -25,7 +29,12 @@ public class RobotContainer {
     public final Drivetrain drivetrain = new Drivetrain(joystick);
     public final Vision vision = Vision.createVision(drivetrain);
     public final ObjectDetection objectDetection = new ObjectDetection("limelight-left", Constants.Vision.CAMERA_0_POS ,drivetrain::getPose);
-
+    public final Grabber grabber = new Grabber();
+    public final Shooter shooter = new Shooter();
+    public final Wrist wrist = new Wrist();
+    public final Elevator elevator = new Elevator();
+    
+    
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
