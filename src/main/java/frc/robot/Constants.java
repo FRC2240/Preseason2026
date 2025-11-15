@@ -82,6 +82,10 @@ public class Constants {
         public static Angle POSITION_THRESHOLD = Rotation.of(3);
         //of.Rotations.of(1)
     }
+    public static class Climber{
+        public static int CLIMBER_MOTOR_ID = 112;
+        public static Angle POSITION_THRESHOLD = Rotation.of(3);
+    }
 
     public static class Elevator {
         public static int LEFT_MOTOR_ID = 105; // Change
