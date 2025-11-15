@@ -18,6 +18,7 @@ public class Wrist extends SubsystemBase {
     MotionMagicTorqueCurrentFOC req = new MotionMagicTorqueCurrentFOC(0);
 
     public Wrist() {
+        motor.setPosition(0);
         TalonFXConfiguration cfg = new TalonFXConfiguration();
 
         cfg.CurrentLimits.SupplyCurrentLimit = 3;
