@@ -67,14 +67,35 @@ public class Constants {
         public static double ANGULAR_STDEV_MEGATAG_2_COEFF = Double.POSITIVE_INFINITY; // No rotation data available
     }
 
+    public static enum ManipulatorStates {
+        IDLE,
+        INTAKE,
+        EXTAKE,
+        L1,
+        L2,
+        L3,
+        L4,
+        ALGAE_INTAKE,
+        ALGAE_EXTAKE,
+        BARGE,
+        PROCESSOR
+    }
+
     public static class Shooter {
         public static Current MAXCURRENT = Amps.of(3);
     }
 
-    public static class Indexer {
-        public static int INDEXER_MOTOR_ID = 109;
-        public static int LOADER_MOTOR_ID = 110;
+    public static class Wrist {
+        public static int WRIST_MOTOR_ID = 111;
+        public static Angle POSITION_THRESHOLD = Rotations.of(3);
     }
+
+    public static class Climber {
+        public static int CLIMBER_MOTOR_ID = 112;
+        public static Angle POSITION_THRESHOLD = Rotations.of(3);
+    }
+
+
 
     public static class Elevator {
         public static int LEFT_MOTOR_ID = 20 ; 
