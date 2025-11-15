@@ -22,6 +22,8 @@ public class Wrist extends SubsystemBase {
 
         cfg.CurrentLimits.SupplyCurrentLimit = 3;
         cfg.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        cfg.Slot0.kP = 24;
+        cfg.Slot0.kD = 1;
 
         motor.getConfigurator().apply(cfg);
 
@@ -42,7 +44,13 @@ public class Wrist extends SubsystemBase {
             return getPosition().isNear(rotations, Constants.Wrist.POSITION_THRESHOLD);
         });
     }
-    
+
+    public Command offsetCommand(Angle offset) {
+        return Commands.runOnce(() -> {
+            setPosition(getPosition().plus(offset));
+        }, this);
+    }
+
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Wrist/position", motor.getPosition().getValueAsDouble());
