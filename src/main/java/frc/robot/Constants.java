@@ -77,6 +77,9 @@ public class Constants {
         L4,
         ALGAE_INTAKE,
         ALGAE_EXTAKE,
+        ALGAE_GROUND,
+        ALGAE_L2,
+        ALGAE_L3,
         BARGE,
         PROCESSOR
     }
