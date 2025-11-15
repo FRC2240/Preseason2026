@@ -1,13 +1,17 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Feet;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -22,6 +26,15 @@ public class ObjectDetection extends SubsystemBase {
     private final DoubleArraySubscriber rawDetectionSubscriber;
     private final Transform3d cameraPose;
     private final Field2d field = new Field2d();
+
+    // Ty to feet
+    private final InterpolatingDoubleTreeMap tyDistanceMap = InterpolatingDoubleTreeMap.ofEntries(
+        Map.entry(-4.0, 1.0),
+        Map.entry(8.5, 2.0),
+        Map.entry(15.0, 3.0),
+        Map.entry(17.0, 4.0)
+    );
+
 
     private class DetectedObject {
         public enum ObjectType {
@@ -71,16 +84,19 @@ public class ObjectDetection extends SubsystemBase {
             double camX = cameraPose.getTranslation().getX();
             double camZ = cameraPose.getTranslation().getY();
             double pitch = cameraPose.getRotation().getY();
-
             double yaw = cameraPose.getRotation().getZ();
 
+            double distY = tyDistanceMap.get(ty);
 
+            SmartDashboard.putNumber("ty", ty);
+            SmartDashboard.putNumber("distY", distY);
 
-            double distY = camZ * Math.tan((ty + pitch) * Math.PI / 180) + camY + robotY;
+            //double distY = camZ * Math.tan((ty + pitch) * Math.PI / 180) + camY + robotY;
             double distX = distY * Math.tan((tx + yaw) * Math.PI / 180) + camX + robotX;
+            
 
 
-            detectedObjects.add(new DetectedObject(classId, new Translation2d(distX, distY)));
+            detectedObjects.add(new DetectedObject(classId, new Translation2d(Feet.of(distX), Feet.of(distY))));
         }
 
 
