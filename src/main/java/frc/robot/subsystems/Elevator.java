@@ -14,8 +14,9 @@ import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 
 public class Elevator extends SubsystemBase {
-    public TalonFX leftMotor = new TalonFX(Constants.Elevator.MOTOR_ID);
-    public TalonFX rightMotor = new TalonFX(Constants.Elevator.MOTOR_ID_FOLLOW);
+    public TalonFX leftMotor = new TalonFX(Constants.Elevator.LEFT_MOTOR_ID);
+    //Right is the follower
+    public TalonFX rightMotor = new TalonFX(Constants.Elevator.RIGHT_MOTOR_ID);
 
     MotionMagicTorqueCurrentFOC req = new MotionMagicTorqueCurrentFOC(0);
 

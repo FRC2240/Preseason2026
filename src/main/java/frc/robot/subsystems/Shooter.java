@@ -9,10 +9,12 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class Shooter extends SubsystemBase {
-    public TalonFX pivot = new TalonFX(39);
-    public TalonFX shooter = new TalonFX(38);
+    // Use different motor id for your own subsystem by making it inside constants
+    public TalonFX pivot = new TalonFX(Constants.Elevator.LEFT_MOTOR_ID);
+    public TalonFX shooter = new TalonFX(Constants.Elevator.RIGHT_MOTOR_ID);
 
     MotionMagicTorqueCurrentFOC req = new MotionMagicTorqueCurrentFOC(0);
 
