@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -27,6 +29,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -78,12 +82,23 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
                     Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
                     null, // Use default timeout (10 s)
                     // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+                    state -> SmartDashboard.putString("SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                     output -> setControl(m_translationCharacterization.withVolts(output)),
-                    null,
+                    this::logSysId,
                     this));
 
+    private void logSysId(SysIdRoutineLog log) {
+        var modules = getModules();
+        for (int i = 0; i < 4; i++) {
+            var module = modules[i];
+            TalonFX driveMotor = module.getDriveMotor();
+            TalonFX angleMotor = module.getSteerMotor();
+            CANcoder encoder = module.getEncoder();
+
+            log.motor("drive-motor-" + i).voltage(driveMotor.getMotorVoltage().getValue()).angularPosition(driveMotor.getPosition().getValue()).angularVelocity(driveMotor.getVelocity().getValue());
+        }
+    }
     /*
      * SysId routine for characterizing steer. This is used to find PID gains for
      * the steer motors.
