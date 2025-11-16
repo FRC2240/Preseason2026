@@ -1,10 +1,8 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.ManipulatorStates;
 
-public class GlobalStateMachine extends SubsystemBase{
+public class GlobalStateMachine{
     Elevator elevator;
     Grabber grabber;
     Wrist wrist;
@@ -17,20 +15,20 @@ public class GlobalStateMachine extends SubsystemBase{
         this.wrist = wristI;
     }
 
-    public Command setStateCommand(ManipulatorStates target, boolean hasGP) {
+    public void setStateCommand(ManipulatorStates target, boolean hasGP) {
         ManipulatorStates lastState = currentState;
         currentState = target;
 
         //intakes
         if(currentState == ManipulatorStates.ALGAE_INTAKE) {
-            // Do Algae Intake
+            // grabber currently has no algae specific commands
         }
         if(currentState == ManipulatorStates.INTAKE){
-            // Do Coral Intake
+            this.grabber.intakeCommand();
         }
 
         //positions
-        if(currentState == ManipulatorStates.IDLE){
+        if( currentState == ManipulatorStates.IDLE){
             // Set pos Idle
         }
 
@@ -67,18 +65,15 @@ public class GlobalStateMachine extends SubsystemBase{
         }
 
         if(currentState == ManipulatorStates.PROCESSOR) {
-            // Set pos Processor
         }
 
 
         //extakes
-        if(lastState != ManipulatorStates.IDLE) {
-            if(currentState == ManipulatorStates.ALGAE_EXTAKE) {
-                
-            }
-            if(currentState == ManipulatorStates.EXTAKE) {
-                // Do Coral extake
-            }
+        if(currentState == ManipulatorStates.ALGAE_EXTAKE) {
+            // grabber currently has no algae specific commands
+        }
+        if(currentState == ManipulatorStates.EXTAKE) {
+            this.grabber.ejectCommand();
         }
     }
     

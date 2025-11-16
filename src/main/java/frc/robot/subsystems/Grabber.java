@@ -23,6 +23,9 @@ public class Grabber extends SubsystemBase {
     public TimeOfFlight sensor = new TimeOfFlight(Constants.Grabber.SENSOR_ID);
     public CoastOut coast = new CoastOut();
 
+    public TorqueCurrentFOC req = new TorqueCurrentFOC(0);
+
+
     public Grabber() {
         TalonFXConfiguration conf = new TalonFXConfiguration();
 
@@ -38,8 +41,6 @@ public class Grabber extends SubsystemBase {
         Distance distance = Millimeter.of(sensor.getRange());
         return distance.compareTo(Constants.Grabber.INTAKE_Distance) <= 0;
     }
-
-    public TorqueCurrentFOC req = new TorqueCurrentFOC(0);
 
     public void setVelocity(Current current) {
         grabber.setControl(req.withOutput(current));
