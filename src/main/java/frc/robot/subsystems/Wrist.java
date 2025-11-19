@@ -21,7 +21,8 @@ public class Wrist extends SubsystemBase {
         motor.setPosition(0);
         TalonFXConfiguration cfg = new TalonFXConfiguration();
 
-        cfg.CurrentLimits.SupplyCurrentLimit = 3;
+        cfg.MotionMagic.MotionMagicAcceleration = 350;
+        cfg.MotionMagic.MotionMagicCruiseVelocity = 35;
         cfg.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         cfg.Slot0.kP = 24;
         cfg.Slot0.kD = 1;
