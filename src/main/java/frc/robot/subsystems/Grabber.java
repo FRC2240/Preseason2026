@@ -18,12 +18,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 import com.playingwithfusion.TimeOfFlight;
-  
 
-public class Grabber extends SubsystemBase{
+public class Grabber extends SubsystemBase {
     public TalonFX grabber = new TalonFX(Constants.Grabber.MOTOR_ID);
     public TimeOfFlight sensor = new TimeOfFlight(Constants.Grabber.SENSOR_ID);
     public CoastOut coast = new CoastOut();
+    public TorqueCurrentFOC req = new TorqueCurrentFOC(0);
 
     public Grabber() {
         TalonFXConfiguration conf = new TalonFXConfiguration();
@@ -36,13 +36,12 @@ public class Grabber extends SubsystemBase{
         grabber.getConfigurator().apply(conf);
     }
 
-
     public boolean gamePiece() {
         Distance distance = Millimeter.of(sensor.getRange());
         return distance.compareTo(Constants.Grabber.INTAKE_Distance) <= 0;
     }
 
-    public TorqueCurrentFOC req = new TorqueCurrentFOC(0);
+    
 
     public void setVelocity(Current current) {
         grabber.setControl(req.withOutput(current));
@@ -58,29 +57,22 @@ public class Grabber extends SubsystemBase{
         }, this);
     }
 
-
     public Command intakeCommand() {
         return Commands.runOnce(() -> {
             setVelocity(Constants.Grabber.INTAKE_VELOCITY);
         }, this);
     }
 
-   public Command ejectCommand() {
+    public Command ejectCommand() {
         return Commands.runOnce(() -> {
-        setVelocity(Constants.Grabber.EJECT_VELOCITY);
+            setVelocity(Constants.Grabber.EJECT_VELOCITY);
         }, this);
     }
 
     public Command idleCommand() {
         return Commands.runOnce(() -> {
-        setVelocity(Amps.of(0));
+            setVelocity(Amps.of(0));
         }, this);
     }
 
-
 }
-
-
-
-
-
