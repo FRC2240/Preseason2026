@@ -19,6 +19,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.generated.TunerConstants;
 
+
 public class Constants {
     public static class Robot {
         public static double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
@@ -86,8 +87,9 @@ public class Constants {
     }
 
     public static class Wrist {
-        public static int WRIST_MOTOR_ID = 111;
+        public static int WRIST_MOTOR_ID = 5;
         public static Angle POSITION_THRESHOLD = Rotations.of(3);
+        
     }
 
     public static class Climber {

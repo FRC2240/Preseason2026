@@ -27,10 +27,8 @@ public class RobotContainer {
     public final Vision vision = Vision.createVision(drivetrain);
     public final ObjectDetection objectDetection = new ObjectDetection("limelight-left", Constants.Vision.CAMERA_0_POS ,drivetrain::getPose);
     public final Grabber grabber = new Grabber();
-    public final Shooter shooter = new Shooter();
     public final Wrist wrist = new Wrist();
     public final Elevator elevator = new Elevator();
-    public final Climber climber = new Climber();
 
 
     public RobotContainer() {
