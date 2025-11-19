@@ -113,8 +113,6 @@ public class Constants {
 
     public static class Grabber {
         public static Distance INTAKE_Distance = Millimeter.of(35);
-        public static Current INTAKE_VELOCITY = Amps.of(10); // Placeholder Value
-        public static Current EJECT_VELOCITY = Amps.of(10); // Placeholder Value
         public static int MOTOR_ID = 19;
         public static int SENSOR_ID = 11;
     }
