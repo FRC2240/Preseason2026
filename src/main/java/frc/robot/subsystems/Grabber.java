@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
@@ -19,9 +20,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import com.playingwithfusion.TimeOfFlight;
 
 public class Grabber extends SubsystemBase {
-    public TalonFX grabber = new TalonFX(Constants.Grabber.MOTOR_ID);
-    public TimeOfFlight sensor = new TimeOfFlight(Constants.Grabber.SENSOR_ID);
-    public CoastOut coast = new CoastOut();
+    private TalonFX grabber = new TalonFX(Constants.Grabber.MOTOR_ID);
+    private TimeOfFlight sensor = new TimeOfFlight(Constants.Grabber.SENSOR_ID);
+    private CoastOut coast = new CoastOut();
+    private TorqueCurrentFOC req = new TorqueCurrentFOC(0);
 
     public Grabber() {
         TalonFXConfiguration conf = new TalonFXConfiguration();
@@ -39,7 +41,7 @@ public class Grabber extends SubsystemBase {
         return distance.compareTo(Constants.Grabber.INTAKE_Distance) <= 0;
     }
 
-    public TorqueCurrentFOC req = new TorqueCurrentFOC(0);
+    
 
     public void setVelocity(Current current) {
         grabber.setControl(req.withOutput(current));
@@ -55,17 +57,12 @@ public class Grabber extends SubsystemBase {
         }, this);
     }
 
-    public Command intakeCommand() {
+    public Command setVelocityCommand(Current current) {
         return Commands.runOnce(() -> {
-            setVelocity(Constants.Grabber.INTAKE_VELOCITY);
+            setVelocity(current);
         }, this);
     }
 
-    public Command ejectCommand() {
-        return Commands.runOnce(() -> {
-            setVelocity(Constants.Grabber.EJECT_VELOCITY);
-        }, this);
-    }
 
     public Command idleCommand() {
         return Commands.runOnce(() -> {
