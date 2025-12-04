@@ -77,14 +77,14 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
      * for the drive motors.
      */
     private final SysIdRoutine sysIdRoutineDrive = new SysIdRoutine(
-            new SysIdRoutine.Config(
+        new SysIdRoutine.Config(
                     null, // Use default ramp rate (1 V/s)
-                    Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
                     null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
+            // Log state with SignalLogger class
                     state -> SmartDashboard.putString("SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism(
-                    output -> setControl(m_translationCharacterization.withVolts(output)),
+        new SysIdRoutine.Mechanism(
+            output -> setControl(m_translationCharacterization.withVolts(output)),
                     this::logSysIdDrive,
                     this));
 
@@ -107,13 +107,15 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
      * the steer motors.
      */
     private final SysIdRoutine sysIdRoutineSteer = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    null, // Use default ramp rate (1 V/s)
-                    Volts.of(7), // Use dynamic voltage of 7 V
-                    null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
+        new SysIdRoutine.Config(
+            /* This is in radians per second², but SysId only supports "volts per second" */
+            Volts.of(Math.PI / 6).per(Second),
+            /* This is in radians per second, but SysId only supports "volts" */
+            Volts.of(Math.PI),
+            null, // Use default timeout (10 s)
+            // Log state with SignalLogger class
                     state -> SmartDashboard.putString("SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism(
+        new SysIdRoutine.Mechanism(
                     volts -> setControl(m_steerCharacterization.withVolts(volts)),
                     this::logSysIdSteer,
                     this));
@@ -291,8 +293,8 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
      */
     @Override
     public void addVisionMeasurement(
-            Pose2d visionRobotPoseMeters,
-            double timestampSeconds,
+        Pose2d visionRobotPoseMeters,
+        double timestampSeconds,
             Matrix<N3, N1> visionMeasurementStdDevs) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds),
                 visionMeasurementStdDevs);
