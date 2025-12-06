@@ -47,6 +47,8 @@ public class RobotContainer {
         joystick1.button(2).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
         joystick1.button(3).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         joystick1.button(4).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+
+        joystick.rightBumper().and(joystick.leftBumper()).onTrue(grabber.setVelocityCommand())
     }
 
     public Command getAutonomousCommand() {
