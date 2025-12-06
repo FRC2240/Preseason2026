@@ -25,7 +25,7 @@ public class RobotContainer {
 
     public final Drivetrain drivetrain = new Drivetrain(joystick);
     public final Vision vision = Vision.createVision(drivetrain);
-    public final ObjectDetection objectDetection = new ObjectDetection("limelight-left", Constants.Vision.CAMERA_0_POS ,drivetrain::getPose);
+    public final ObjectDetection objectDetection = new ObjectDetection("limelight", Constants.Vision.CAMERA_LL_POS ,drivetrain::getPose);
     public final Grabber grabber = new Grabber();
     public final Wrist wrist = new Wrist();
     public final Elevator elevator = new Elevator();

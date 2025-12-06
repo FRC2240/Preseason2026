@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.Millimeter;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.Millimeter;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -50,11 +49,14 @@ public class Constants {
     public static class Vision {
         // stores tag layout for the current year's feild
 
-        // assuming stores distance of cameras from center of bot
-        public static Transform3d CAMERA_0_POS = new Transform3d(-0.272575, 0.2413, 0.520699,
+        // stores distance of cameras from center of bot
+        public static Transform3d CAMERA_0_POS = new Transform3d(-0.2921, 0.31115 , 0.20955,
                 new Rotation3d(Degrees.of(0), Degrees.of(-32), Degrees.of(-20)));
-        public static Transform3d CAMERA_1_POS = new Transform3d(0.272575, 0.2413, 0.510699,
+        public static Transform3d CAMERA_1_POS = new Transform3d(0.2921, 0.31115, 0.20955,
                 new Rotation3d(Degrees.of(0), Degrees.of(-32), Degrees.of(20)));
+
+        public static Transform3d CAMERA_LL_POS = new Transform3d(-0.272575, 0.2413, 0.520699,
+                new Rotation3d(Degrees.of(0), Degrees.of(-32), Degrees.of(-20)));
 
         public static double MAX_UNCERTAINTY = 0.3; // TBD
         public static double MAX_Z_ERROR = 0.2; // TBD

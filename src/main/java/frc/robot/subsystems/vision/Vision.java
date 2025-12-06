@@ -8,6 +8,8 @@ import frc.robot.subsystems.vision.BaseVisionIO.vision_configuration_type;
 
 import static frc.robot.Constants.Vision.ANGULAR_STDEV_COEFF;
 import static frc.robot.Constants.Vision.ANGULAR_STDEV_MEGATAG_2_COEFF;
+import static frc.robot.Constants.Vision.CAMERA_0_POS;
+import static frc.robot.Constants.Vision.CAMERA_1_POS;
 import static frc.robot.Constants.Vision.LINEAR_STDEV_COEFF;
 import static frc.robot.Constants.Vision.LINEAR_STDEV_MEGATAG_2_COEFF;
 import static frc.robot.Constants.Field.APRIL_TAG_LAYOUT;
@@ -33,12 +35,12 @@ public class Vision extends SubsystemBase {
     public static Vision createVision(Drivetrain drivetrain) {
         if (RobotBase.isReal()) {
             return new Vision(drivetrain::addVisionMeasurement,
-                    new RealLimelightVisionIO("limelight-left", drivetrain::getHeading),
-                    new RealLimelightVisionIO("limelight-right", drivetrain::getHeading));
+                    new RealPhotonVisionIO("photoncam-left", CAMERA_0_POS),
+                    new RealPhotonVisionIO("photoncam-right", CAMERA_1_POS));
         } else {
             return new Vision(drivetrain::addVisionMeasurement,
                     new SimPhotonVisionIO("camera_0", drivetrain::getPose, Constants.Vision.CAMERA_0_POS),
-                    new SimPhotonVisionIO("camera_1", drivetrain::getPose, Constants.Vision.CAMERA_0_POS));
+                    new SimPhotonVisionIO("camera_1", drivetrain::getPose, Constants.Vision.CAMERA_1_POS));
         }
     }
 
@@ -107,9 +109,9 @@ public class Vision extends SubsystemBase {
                         && estimation.uncertainty() > MAX_UNCERTAINTY);
                 boolean zErrorInvalid = Math.abs(estimation.position().getZ()) > MAX_Z_ERROR;
                 boolean xOutBounds = (estimation.position().getX() < 0.0)
-                        && (estimation.position().getX() > APRIL_TAG_LAYOUT.getFieldLength());
+                        || (estimation.position().getX() > APRIL_TAG_LAYOUT.getFieldLength());
                 boolean yOutBounds = (estimation.position().getY() < 0.0)
-                        && (estimation.position().getY() > APRIL_TAG_LAYOUT.getFieldWidth());
+                        || (estimation.position().getY() > APRIL_TAG_LAYOUT.getFieldWidth());
 
                 boolean reject_pose = tagCountInvalid || uncertaintyInvalid || zErrorInvalid || xOutBounds
                         || yOutBounds;
