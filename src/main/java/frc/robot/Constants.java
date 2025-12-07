@@ -50,13 +50,13 @@ public class Constants {
         // stores tag layout for the current year's feild
 
         // stores distance of cameras from center of bot
-        public static Transform3d CAMERA_0_POS = new Transform3d(-0.2921, 0.31115 , 0.20955,
+        public static Transform3d CAMERA_0_POS = new Transform3d(0.31115, 0.2921 , 0.20955,
                 new Rotation3d(Degrees.of(0), Degrees.of(-30), Degrees.of(-20)));
-        public static Transform3d CAMERA_1_POS = new Transform3d(0.2921, 0.31115, 0.20955,
+        public static Transform3d CAMERA_1_POS = new Transform3d(0.31115, -0.2921, 0.20955,
                 new Rotation3d(Degrees.of(0), Degrees.of(-30), Degrees.of(20)));
 
-        public static Transform3d CAMERA_LL_POS = new Transform3d(0, -0.216373, 0.595738,
-                new Rotation3d(Degrees.of(0), Degrees.of(-30), Degrees.of(0)));
+        public static Transform3d CAMERA_LL_POS = new Transform3d(-0.216373, 0, 0.595738,
+                new Rotation3d(Degrees.of(0), Degrees.of(30), Degrees.of(0)));
 
         public static double MAX_UNCERTAINTY = 0.3; // TBD
         public static double MAX_Z_ERROR = 0.2; // TBD
