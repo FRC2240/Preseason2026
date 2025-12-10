@@ -320,10 +320,11 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
                 .withRotationalRate(-joystick.getRightX() * Robot.MAX_SLOW_ANGULAR_RATE));
     }
 
-    public Command driveToPose(Pose2d target) {
+    public Command driveToPose(Supplier<Pose2d> targetSupplier) {
         return Commands.runOnce(() -> {
             joystickTimer.restart();
         }, this).andThen(Commands.run(() -> {
+            Pose2d target = targetSupplier.get();
             Pose2d currentPose = getState().Pose;
 
             // Gets x and y components
@@ -347,7 +348,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
 
             setControl(driveAlignment.withSpeeds(speeds));
         }, this).until(() -> {
-            // Until close enough to the pose
+            Pose2d target = targetSupplier.get();
             Pose2d currentPose = getState().Pose;
 
             return currentPose.getRotation().getMeasure().isNear(target.getRotation().getMeasure(),
@@ -365,4 +366,10 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
                             Math.abs(joystick.getLeftY()) > Robot.CONTROLLER_THRESHOLD);
         }));
     }
+
+    public Command driveToPose(Pose2d target) {
+        Supplier<Pose2d> targetSupplier = () -> target;
+        return this.driveToPose(targetSupplier);
+    }
+        
 }
