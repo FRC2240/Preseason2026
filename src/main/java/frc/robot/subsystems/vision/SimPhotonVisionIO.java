@@ -11,7 +11,7 @@ import static frc.robot.Constants.Field.APRIL_TAG_LAYOUT;
 
 import java.util.function.Supplier;
 
-public class SimPhotonVisionIO extends ParentPhotonVisionIO {
+public class SimPhotonVisionIO extends PhotonVisionIO {
 
     private static VisionSystemSim vision_sim;
     

@@ -15,12 +15,12 @@ import org.photonvision.PhotonCamera;
 
 import edu.wpi.first.math.geometry.Transform3d;
 
-public class ParentPhotonVisionIO implements BaseVisionIO{
+public class PhotonVisionIO implements BaseVisionIO{
     protected final PhotonCamera camera;
     protected final Transform3d camera_pos;
 
     //constructor method for camera objects
-    public ParentPhotonVisionIO(String name, Transform3d camera_pos){
+    public PhotonVisionIO(String name, Transform3d camera_pos){
         camera = new PhotonCamera(name);
         this.camera_pos = camera_pos;
     }
