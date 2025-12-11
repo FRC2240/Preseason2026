@@ -50,6 +50,12 @@ public class Constants {
         // stores tag layout for the current year's feild
 
         // stores distance of cameras from center of bot
+        //positive x is front
+        //positive y is left
+        //z like normal
+
+        //TODO document rot 3d
+        
         public static Transform3d CAMERA_0_POS = new Transform3d(0.31115, 0.2921 , 0.20955,
                 new Rotation3d(Degrees.of(0), Degrees.of(-30), Degrees.of(-20)));
         public static Transform3d CAMERA_1_POS = new Transform3d(0.31115, -0.2921, 0.20955,
